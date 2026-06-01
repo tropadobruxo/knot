@@ -4,5 +4,6 @@ export interface AgeVerificationResult {
 }
 
 export interface AgeVerificationProvider {
-  verify(sessionId: string): Promise<AgeVerificationResult>;
+  startVerification(userId: string): Promise<{ redirectUrl: string }>;
+  handleWebhook(payload: unknown): Promise<AgeVerificationResult>;
 }

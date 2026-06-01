@@ -1,25 +1,37 @@
 import { describe, expect, it } from "vitest";
 import { SandboxAgeVerificationProvider } from "./sandbox-provider";
 
-describe("AgeVerificationProvider", () => {
-  it("sandbox provider returns verified with token", async () => {
-    const provider = new SandboxAgeVerificationProvider();
-    const result = await provider.verify("test-session");
+describe("SandboxAgeVerificationProvider", () => {
+  const provider = new SandboxAgeVerificationProvider();
 
+  it("startVerification returns a redirect URL", async () => {
+    const result = await provider.startVerification("user-123");
+    expect(result.redirectUrl).toBeTruthy();
+  });
+
+  it("handleWebhook returns verified with sandbox token", async () => {
+    const result = await provider.handleWebhook({ userId: "user-123" });
     expect(result.verified).toBe(true);
     expect(result.token).toMatch(/^sandbox_/);
   });
 
-  it("result type has only verified and token — no PII fields", () => {
-    const result = { verified: true, token: "t" };
-    const keys = Object.keys(result);
+  it("handleWebhook rejects PII fields", async () => {
+    const piiPayloads = [
+      { userId: "u", document: "img.jpg" },
+      { userId: "u", documentNumber: "123" },
+      { userId: "u", cpf: "000.000.000-00" },
+      { userId: "u", dateOfBirth: "1990-01-01" },
+      { userId: "u", birthDate: "1990-01-01" },
+    ];
 
+    for (const payload of piiPayloads) {
+      await expect(provider.handleWebhook(payload)).rejects.toThrow("PII");
+    }
+  });
+
+  it("result only contains verified and token — no PII", async () => {
+    const result = await provider.handleWebhook({ userId: "user-123" });
+    const keys = Object.keys(result);
     expect(keys).toEqual(["verified", "token"]);
-    expect(keys).not.toContain("document");
-    expect(keys).not.toContain("documentNumber");
-    expect(keys).not.toContain("dateOfBirth");
-    expect(keys).not.toContain("birthDate");
-    expect(keys).not.toContain("cpf");
-    expect(keys).not.toContain("rg");
   });
 });

@@ -85,6 +85,13 @@ export default function WelcomePage() {
           </button>
         </div>
 
+        <button
+          onClick={() => (window.location.href = "/verify")}
+          className="text-sm text-violet-600 hover:underline"
+        >
+          Explorar em modo demo
+        </button>
+
         <p className="max-w-xs text-center text-sm text-zinc-500">
           Plataforma exclusiva para maiores de 18 anos. Verificação de idade
           obrigatória.

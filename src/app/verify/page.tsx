@@ -21,18 +21,10 @@ export default function VerifyPage() {
 
       const data = (await res.json()) as { redirectUrl: string };
 
-      // In sandbox mode, simulate the webhook callback
+      // In sandbox/demo mode, skip webhook and go to onboarding
       if (data.redirectUrl.includes("sandbox")) {
-        const webhookRes = await fetch("/api/verification/webhook", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: "current" }),
-        });
-
-        if (webhookRes.ok) {
-          router.push("/onboarding");
-          return;
-        }
+        router.push("/onboarding");
+        return;
       }
 
       // In production, redirect to provider's verification page

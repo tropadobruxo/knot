@@ -50,12 +50,17 @@ export default function OnboardingPage() {
       });
 
       if (!res.ok) {
+        // Demo mode: if auth fails, still navigate
         const data = (await res.json()) as { error: string };
+        if (data.error === "Não autenticado.") {
+          router.push("/discover");
+          return;
+        }
         setError(data.error);
         return;
       }
 
-      router.push("/events");
+      router.push("/discover");
     } finally {
       setLoading(false);
     }

@@ -54,9 +54,11 @@ export default function OrganizerPage() {
         return r.json() as Promise<OrganizerData>;
       })
       .then((data) => {
-        if (data) setOrg(data);
+        if (data) {
+          setOrg({ ...data, events: data.events ?? [] });
+        }
       })
-      .catch(() => {});
+      .catch(() => setNotFound(true));
   }, []);
 
   async function handleBecomeOrganizer() {

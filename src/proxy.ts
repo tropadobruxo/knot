@@ -20,6 +20,11 @@ function isPublic(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Preview mode: skip auth when secrets are not configured
+  if (!process.env["AUTH_SECRET"] && !process.env["NEXTAUTH_SECRET"]) {
+    return NextResponse.next();
+  }
+
   if (isPublic(pathname)) {
     return NextResponse.next();
   }

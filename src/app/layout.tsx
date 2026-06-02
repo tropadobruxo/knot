@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Knot",
   description:
     "Rede social de conexão para a comunidade kink/fetichista adulta.",
+  manifest: "/api/manifest",
 };
 
 export default function RootLayout({

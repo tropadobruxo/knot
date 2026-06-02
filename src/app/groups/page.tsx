@@ -158,6 +158,28 @@ export default function GroupsPage() {
         />
       </div>
 
+      {/* Loading skeleton */}
+      {!data && (
+        <div className="mt-4 space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+              <div className="flex items-start gap-3">
+                <div className="skeleton h-12 w-12 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-5 w-36" />
+                  <div className="skeleton h-4 w-full" />
+                  <div className="flex gap-4">
+                    <div className="skeleton h-3 w-16" />
+                    <div className="skeleton h-3 w-20" />
+                    <div className="skeleton h-3 w-16" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* List */}
       {data && data.groups.length === 0 && (
         <p className="mt-8 text-zinc-500">Nenhum grupo encontrado.</p>

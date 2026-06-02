@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { DEMO_PROFILES } from "@/lib/demo-data";
 import { ProfileCompleteness } from "@/components/profile-completeness";
+import { MatchCelebration } from "@/components/match-celebration";
 
 interface Profile {
   id: string;
@@ -37,7 +38,7 @@ export default function DiscoverPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [matchMsg, setMatchMsg] = useState<string | null>(null);
+  const [matchUsername, setMatchUsername] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filterCity, setFilterCity] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -78,9 +79,18 @@ export default function DiscoverPage() {
 
   const activeFilters = [filterCity, filterRole, filterIntent].filter(Boolean).length;
 
+  const dismissMatch = useCallback(() => setMatchUsername(null), []);
+
+  function haptic(ms = 10) {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(ms);
+    }
+  }
+
   async function handleLike() {
     const profile = filtered[index];
     if (!profile) return;
+    haptic(15);
 
     try {
       const res = await fetch("/api/like", {
@@ -92,14 +102,14 @@ export default function DiscoverPage() {
       if (res.ok) {
         const data = (await res.json()) as { matched: boolean; conversationId: string | null };
         if (data.matched) {
-          setMatchMsg(`Match com ${profile.username}!`);
-          setTimeout(() => setMatchMsg(null), 3000);
+          haptic(30);
+          setMatchUsername(profile.username);
         }
       }
     } catch {
       if (Math.random() > 0.5) {
-        setMatchMsg(`Match com ${profile.username}!`);
-        setTimeout(() => setMatchMsg(null), 3000);
+        haptic(30);
+        setMatchUsername(profile.username);
       }
     }
 
@@ -107,6 +117,7 @@ export default function DiscoverPage() {
   }
 
   function handlePass() {
+    haptic(5);
     setIndex((i) => i + 1);
   }
 
@@ -119,8 +130,20 @@ export default function DiscoverPage() {
 
   if (loading) {
     return (
-      <main className="flex flex-1 items-center justify-center">
-        <p className="text-zinc-500">Carregando perfis...</p>
+      <main className="mx-auto max-w-md px-6 py-10">
+        <div className="skeleton h-8 w-32" />
+        <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
+          <div className="skeleton aspect-square w-full" style={{ borderRadius: 0 }} />
+          <div className="space-y-3 p-4">
+            <div className="skeleton h-6 w-40" />
+            <div className="skeleton h-4 w-24" />
+            <div className="skeleton h-4 w-full" />
+            <div className="flex gap-3 pt-2">
+              <div className="skeleton h-12 flex-1" />
+              <div className="skeleton h-12 flex-1" />
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -239,11 +262,11 @@ export default function DiscoverPage() {
         <ProfileCompleteness />
       </div>
 
-      {matchMsg && (
-        <div className="mt-4 animate-bounce rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 p-4 text-center shadow-lg">
-          <p className="text-lg font-bold text-white">{matchMsg}</p>
-          <p className="text-sm text-white/80">Vá para Matches para conversar</p>
-        </div>
+      {matchUsername && (
+        <MatchCelebration
+          username={matchUsername}
+          onClose={dismissMatch}
+        />
       )}
 
       <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700">

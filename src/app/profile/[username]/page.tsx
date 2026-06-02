@@ -58,6 +58,14 @@ export default async function ProfilePage({ params }: Props) {
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{profile.username}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
+            {profile.emailVerified && (
+              <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                </svg>
+                Email verificado
+              </span>
+            )}
             {profile.ageVerified && (
               <span className="flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
                 <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">

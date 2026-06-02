@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { DEMO_MATCHES } from "@/lib/demo-data";
 
@@ -71,10 +72,13 @@ export default function MatchesPage() {
             >
               <div className="flex items-center gap-3">
                 {m.user.image ? (
-                  <img
+                  <Image
                     src={m.user.image}
                     alt={m.user.username}
+                    width={40}
+                    height={40}
                     className="h-10 w-10 rounded-full object-cover"
+                    unoptimized={m.user.image.includes("dicebear")}
                   />
                 ) : (
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-sm font-medium text-violet-800">

@@ -2,10 +2,41 @@ import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getPublicProfile } from "@/lib/profile";
 import { TrustActions } from "@/components/trust-actions";
+import { PhotoLightbox } from "@/components/photo-lightbox";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 interface Props {
   params: Promise<{ username: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params;
+  const profile = await getPublicProfile(username);
+
+  if (!profile) return { title: "Perfil não encontrado — Knot" };
+
+  const description = profile.bio
+    ? profile.bio.slice(0, 160)
+    : `Perfil de ${profile.username} no Knot`;
+
+  const photoUrl = profile.photos[0]?.url;
+
+  return {
+    title: `${profile.username} — Knot`,
+    description,
+    openGraph: {
+      title: `${profile.username} — Knot`,
+      description,
+      type: "profile",
+      ...(photoUrl && { images: [{ url: photoUrl, width: 600, height: 600 }] }),
+    },
+    twitter: {
+      card: photoUrl ? "summary_large_image" : "summary",
+      title: `${profile.username} — Knot`,
+      description,
+    },
+  };
 }
 
 export default async function ProfilePage({ params }: Props) {
@@ -87,28 +118,7 @@ export default async function ProfilePage({ params }: Props) {
       {profile.photos.length > 0 && (
         <div className="mt-6">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Fotos</h3>
-          <div className="mt-2 grid grid-cols-3 gap-2">
-            {profile.photos.map((photo) => (
-              <div
-                key={photo.id}
-                className="relative aspect-square overflow-hidden rounded-xl bg-zinc-200"
-              >
-                <img
-                  src={photo.url}
-                  alt=""
-                  className="h-full w-full object-cover transition hover:scale-105"
-                />
-                {photo.verified && (
-                  <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded-full bg-green-600/90 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
-                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                    </svg>
-                    verificada
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+          <PhotoLightbox photos={profile.photos.map((p) => ({ id: p.id, url: p.url, verified: p.verified }))} />
         </div>
       )}
 

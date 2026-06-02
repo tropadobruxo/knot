@@ -8,6 +8,17 @@ export const metadata: Metadata = {
   description:
     "Rede social de conexão para a comunidade kink/fetichista adulta.",
   manifest: "/api/manifest",
+  openGraph: {
+    title: "Knot",
+    description: "Conexões autênticas para a comunidade kink e fetichista.",
+    type: "website",
+    siteName: "Knot",
+  },
+  twitter: {
+    card: "summary",
+    title: "Knot",
+    description: "Conexões autênticas para a comunidade kink e fetichista.",
+  },
 };
 
 export default function RootLayout({
@@ -20,7 +31,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("knot-theme");if(t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem("knot-theme");if(t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme:dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();if("serviceWorker"in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("/sw-push.js")})}`,
           }}
         />
       </head>

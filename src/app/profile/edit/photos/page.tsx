@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { PhotoUploader } from "@/components/PhotoUploader";
 
@@ -74,11 +75,13 @@ export default function EditPhotosPage() {
             key={photo.id}
             className="flex items-center gap-3 rounded-lg border border-zinc-200 p-3"
           >
-            <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-zinc-200">
-              <img
+            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-zinc-200">
+              <Image
                 src={photo.url}
                 alt=""
-                className="h-full w-full object-cover"
+                fill
+                className="object-cover"
+                unoptimized
               />
             </div>
             <div className="flex-1">

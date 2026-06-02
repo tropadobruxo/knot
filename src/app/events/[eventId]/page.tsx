@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { TrustActions } from "@/components/trust-actions";
 
 interface EventDetail {
   id: string;
@@ -221,6 +222,12 @@ export default function EventDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Report event */}
+      <div className="mt-6 border-t border-zinc-200 pt-4">
+        <p className="text-xs text-zinc-400">Algo errado com este evento?</p>
+        <TrustActions targetId={eventId} targetType="event" />
+      </div>
     </main>
   );
 }

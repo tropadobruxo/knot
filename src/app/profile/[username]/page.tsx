@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getPublicProfile } from "@/lib/profile";
+import { TrustActions } from "@/components/trust-actions";
 import Link from "next/link";
 
 interface Props {
@@ -123,6 +124,10 @@ export default async function ProfilePage({ params }: Props) {
             ))}
           </ul>
         </div>
+      )}
+
+      {!isOwner && session?.user && (
+        <TrustActions targetId={profile.id} targetType="user" />
       )}
     </main>
   );

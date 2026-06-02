@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useChatStream } from "@/lib/messaging/use-chat-stream";
-import { DEMO_MESSAGES } from "@/lib/demo-data";
 
 export default function ChatPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -13,7 +12,6 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [demoMode, setDemoMode] = useState(false);
-  const [demoMessages, setDemoMessages] = useState(DEMO_MESSAGES);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { messages, isConnected, addOptimistic } = useChatStream(conversationId);
@@ -33,7 +31,7 @@ export default function ChatPage() {
   }, [conversationId]);
 
   // Auto-scroll on new messages
-  const displayMessages = demoMode ? demoMessages : messages;
+  const displayMessages = messages;
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [displayMessages.length]);
@@ -46,17 +44,6 @@ export default function ChatPage() {
     setError("");
 
     if (demoMode) {
-      setDemoMessages((prev) => [
-        ...prev,
-        {
-          id: `demo-${Date.now()}`,
-          content: newMessage,
-          createdAt: new Date().toISOString(),
-          senderId: "demo-me",
-          sender: { username: "você" },
-        },
-      ]);
-      setNewMessage("");
       setSending(false);
       return;
     }

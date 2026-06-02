@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { DEMO_EVENTS } from "@/lib/demo-data";
 
 interface EventSummary {
   id: string;
@@ -50,6 +49,7 @@ export default function EventsPage() {
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -63,12 +63,14 @@ export default function EventsPage() {
         return r.json() as Promise<EventsResponse>;
       })
       .then((data) => {
-        setEvents(data.events.length > 0 ? data.events : DEMO_EVENTS as unknown as EventSummary[]);
+        setEvents(data.events);
         setPages(data.pages || 1);
+        setLoading(false);
       })
       .catch(() => {
-        setEvents(DEMO_EVENTS as unknown as EventSummary[]);
+        setEvents([]);
         setPages(1);
+        setLoading(false);
       });
   }, [city, type, page]);
 
@@ -92,6 +94,7 @@ export default function EventsPage() {
           onChange={(e) => {
             setCity(e.target.value);
             setPage(1);
+            setLoading(true);
           }}
           className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         />
@@ -100,6 +103,7 @@ export default function EventsPage() {
           onChange={(e) => {
             setType(e.target.value);
             setPage(1);
+            setLoading(true);
           }}
           className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         >
@@ -111,16 +115,44 @@ export default function EventsPage() {
       </div>
 
       <div className="mt-6 space-y-4">
-        {events.length === 0 && (
-          <p className="text-center text-zinc-500">
-            Nenhum evento encontrado.
-          </p>
+        {loading && (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+                <div className="flex items-start gap-3">
+                  <div className="skeleton h-12 w-12 rounded-xl" />
+                  <div className="flex-1 space-y-2">
+                    <div className="skeleton h-4 w-20" />
+                    <div className="skeleton h-5 w-48" />
+                    <div className="flex gap-4">
+                      <div className="skeleton h-3 w-20" />
+                      <div className="skeleton h-3 w-24" />
+                      <div className="skeleton h-3 w-16" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
-        {events.map((event) => (
+        {!loading && events.length === 0 && (
+          <div className="py-10 text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
+            <div className="relative mx-auto h-24 w-24">
+              <div className="animate-float relative flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-100 to-violet-100">
+                <svg className="h-12 w-12 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                </svg>
+              </div>
+            </div>
+            <p className="mt-4 text-lg font-semibold text-zinc-700 dark:text-zinc-300">Nenhum evento encontrado</p>
+            <p className="mt-1 text-sm text-zinc-400">Tente mudar os filtros ou volte mais tarde</p>
+          </div>
+        )}
+        {!loading && events.map((event, idx) => (
           <Link
             key={event.id}
             href={`/events/${event.id}`}
-            className="group block rounded-xl border border-zinc-200 p-4 transition hover:border-violet-300 hover:shadow-md"
+            className={`group block rounded-xl border border-zinc-200 p-4 transition hover:border-violet-300 hover:shadow-md dark:border-zinc-700 animate-card-enter${idx > 0 && idx <= 4 ? `-${idx}` : ""}`}
           >
             <div className="flex items-start gap-3">
               <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${TYPE_COLORS[event.type] ?? "bg-zinc-100 text-zinc-600"}`}>
@@ -199,7 +231,7 @@ export default function EventsPage() {
       {pages > 1 && (
         <div className="mt-6 flex justify-center gap-2">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => { setPage((p) => Math.max(1, p - 1)); setLoading(true); }}
             disabled={page === 1}
             className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
           >
@@ -209,7 +241,7 @@ export default function EventsPage() {
             {page} / {pages}
           </span>
           <button
-            onClick={() => setPage((p) => Math.min(pages, p + 1))}
+            onClick={() => { setPage((p) => Math.min(pages, p + 1)); setLoading(true); }}
             disabled={page === pages}
             className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
           >

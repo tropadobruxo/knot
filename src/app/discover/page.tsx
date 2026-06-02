@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { DEMO_PROFILES } from "@/lib/demo-data";
 import { ProfileCompleteness } from "@/components/profile-completeness";
 import { MatchCelebration } from "@/components/match-celebration";
 
@@ -51,11 +50,11 @@ export default function DiscoverPage() {
         return r.json() as Promise<{ profiles: Profile[] }>;
       })
       .then((d) => {
-        setProfiles(d.profiles.length > 0 ? d.profiles : DEMO_PROFILES);
+        setProfiles(d.profiles);
         setLoading(false);
       })
       .catch(() => {
-        setProfiles(DEMO_PROFILES);
+        setProfiles([]);
         setLoading(false);
       });
   }, []);

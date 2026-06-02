@@ -51,9 +51,35 @@ export default function PremiumPage() {
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
-      <div className="text-center">
-        <h1 className="bg-gradient-to-r from-violet-600 to-pink-500 bg-clip-text text-3xl font-extrabold text-transparent">
+    <main className="relative mx-auto max-w-3xl overflow-hidden px-6 py-10">
+      {/* Decorative floating elements */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="animate-float-slow absolute -top-10 right-[15%] h-48 w-48 rounded-full bg-violet-200 opacity-20 blur-3xl" />
+        <div className="animate-float-delayed absolute bottom-[20%] left-[10%] h-36 w-36 rounded-full bg-pink-200 opacity-20 blur-3xl" />
+        <svg className="animate-float absolute left-[5%] top-[15%] h-8 w-8 text-amber-300/30" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
+        </svg>
+        <svg className="animate-float-delayed absolute right-[8%] top-[25%] h-6 w-6 text-violet-300/30" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+        </svg>
+        <svg className="animate-float absolute bottom-[30%] right-[12%] h-7 w-7 text-pink-300/25" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+        </svg>
+      </div>
+
+      <div className="relative text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
+        <div className="mb-3 flex items-center justify-center gap-1">
+          <svg className="h-6 w-6 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
+          </svg>
+          <svg className="h-8 w-8 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
+          </svg>
+          <svg className="h-6 w-6 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
+          </svg>
+        </div>
+        <h1 className="animate-gradient bg-gradient-to-r from-violet-600 via-pink-500 to-violet-600 bg-clip-text text-4xl font-extrabold text-transparent">
           Knot Plus
         </h1>
         <p className="mt-2 text-zinc-500">
@@ -82,7 +108,7 @@ export default function PremiumPage() {
         </div>
 
         {/* Plus */}
-        <div className="relative overflow-hidden rounded-2xl border-2 border-violet-500 bg-gradient-to-b from-violet-50 to-white p-6 shadow-lg">
+        <div className="animate-glow relative overflow-hidden rounded-2xl border-2 border-violet-500 bg-gradient-to-b from-violet-50 to-white p-6 shadow-lg">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-200 opacity-50 blur-2xl" />
           <div className="relative">
             <div className="flex items-center gap-2">

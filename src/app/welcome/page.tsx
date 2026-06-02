@@ -66,8 +66,33 @@ export default function WelcomePage() {
         {/* Hero */}
         <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6">
           {/* Background gradient orbs */}
-          <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-200 opacity-40 blur-3xl" />
-          <div className="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-pink-200 opacity-40 blur-3xl" />
+          <div className="animate-float-slow absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-200 opacity-40 blur-3xl" />
+          <div className="animate-float-delayed absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-pink-200 opacity-40 blur-3xl" />
+          <div className="animate-float absolute -left-10 top-1/3 h-40 w-40 rounded-full bg-fuchsia-200 opacity-20 blur-3xl" />
+
+          {/* Decorative floating SVG illustrations */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            {/* Knot/rope icon top-left */}
+            <svg className="animate-float absolute left-[10%] top-[15%] h-16 w-16 text-violet-300/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+            </svg>
+            {/* Heart top-right */}
+            <svg className="animate-float-delayed absolute right-[12%] top-[20%] h-12 w-12 text-pink-300/40" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+            </svg>
+            {/* Shield bottom-left */}
+            <svg className="animate-float-slow absolute bottom-[20%] left-[8%] h-14 w-14 text-emerald-300/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+            </svg>
+            {/* Sparkle bottom-right */}
+            <svg className="animate-float absolute bottom-[25%] right-[10%] h-10 w-10 text-amber-300/40" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            {/* Users icon mid-right */}
+            <svg className="animate-float-delayed absolute right-[5%] top-[50%] h-10 w-10 text-violet-300/25" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+          </div>
 
           <div className="relative z-10 text-center" style={{ animation: "slide-up 0.6s ease-out" }}>
             <h1 className="bg-gradient-to-r from-violet-600 via-purple-500 to-pink-500 bg-clip-text text-6xl font-extrabold tracking-tight text-transparent">

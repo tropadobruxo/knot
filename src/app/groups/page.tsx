@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { DEMO_GROUPS } from "@/lib/demo-data";
 
 interface GroupItem {
   id: string;
@@ -41,14 +40,10 @@ export default function GroupsPage() {
         return r.json() as Promise<GroupsResponse>;
       })
       .then((d) => {
-        if (d.groups.length > 0) {
-          setData(d);
-        } else {
-          setData({ groups: DEMO_GROUPS, total: DEMO_GROUPS.length, page: 1, pages: 1 });
-        }
+        setData(d);
       })
       .catch(() => {
-        setData({ groups: DEMO_GROUPS, total: DEMO_GROUPS.length, page: 1, pages: 1 });
+        setData({ groups: [], total: 0, page: 1, pages: 1 });
       });
   }, [city, page]);
 
@@ -182,16 +177,33 @@ export default function GroupsPage() {
 
       {/* List */}
       {data && data.groups.length === 0 && (
-        <p className="mt-8 text-zinc-500">Nenhum grupo encontrado.</p>
+        <div className="mt-12 text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
+          <div className="relative mx-auto h-28 w-28">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-indigo-200 opacity-50 blur-xl" />
+            <div className="animate-float relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-indigo-100">
+              <svg className="h-14 w-14 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              </svg>
+            </div>
+            <svg className="animate-float-delayed absolute -right-2 -top-1 h-5 w-5 text-violet-300" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            <svg className="animate-float absolute -left-3 top-3 h-4 w-4 text-indigo-300" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+          </div>
+          <p className="mt-5 text-lg font-semibold text-zinc-700">Nenhum grupo encontrado</p>
+          <p className="mt-1 text-sm text-zinc-400">Crie um grupo ou explore os existentes</p>
+        </div>
       )}
 
       {data && data.groups.length > 0 && (
         <div className="mt-4 space-y-3">
-          {data.groups.map((group) => (
+          {data.groups.map((group, idx) => (
             <Link
               key={group.id}
               href={`/groups/${group.id}`}
-              className="group block rounded-xl border border-zinc-200 p-4 transition hover:border-violet-300 hover:shadow-md"
+              className={`group block rounded-xl border border-zinc-200 p-4 transition hover:border-violet-300 hover:shadow-md animate-card-enter${idx > 0 && idx <= 4 ? `-${idx}` : ""}`}
             >
               <div className="flex items-start gap-3">
                 <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600">

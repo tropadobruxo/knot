@@ -62,57 +62,95 @@ export default function WelcomePage() {
 
   if (mode === "landing") {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold tracking-tight">Knot</h1>
-          <p className="mt-3 text-lg text-zinc-600">
-            Conexão para a comunidade kink/fetichista adulta.
+      <main className="flex min-h-screen flex-col">
+        {/* Hero */}
+        <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6">
+          {/* Background gradient orbs */}
+          <div className="absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-200 opacity-40 blur-3xl" />
+          <div className="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-pink-200 opacity-40 blur-3xl" />
+
+          <div className="relative z-10 text-center" style={{ animation: "slide-up 0.6s ease-out" }}>
+            <h1 className="bg-gradient-to-r from-violet-600 via-purple-500 to-pink-500 bg-clip-text text-6xl font-extrabold tracking-tight text-transparent">
+              Knot
+            </h1>
+            <p className="mt-4 text-xl text-zinc-600">
+              Conexões autênticas para a comunidade kink.
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-zinc-400">
+              Descubra pessoas, participe de eventos, junte-se a grupos.
+              Tudo com privacidade e segurança.
+            </p>
+          </div>
+
+          {/* Feature pills */}
+          <div className="relative z-10 mt-8 flex flex-wrap justify-center gap-2" style={{ animation: "slide-up 0.8s ease-out" }}>
+            {["Verificação 18+", "Pseudônimos", "Zero PII", "Modo discreto"].map((f) => (
+              <span
+                key={f}
+                className="rounded-full border border-zinc-200 bg-white/80 px-3 py-1 text-xs text-zinc-600 backdrop-blur"
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+
+          {/* CTA buttons */}
+          <div className="relative z-10 mt-10 w-full max-w-sm space-y-3" style={{ animation: "slide-up 1s ease-out" }}>
+            <button
+              onClick={() => setMode("register")}
+              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-3.5 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98]"
+            >
+              Criar conta
+            </button>
+            <button
+              onClick={() => setMode("login")}
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3.5 font-semibold transition hover:bg-zinc-50 active:scale-[0.98]"
+            >
+              Entrar
+            </button>
+          </div>
+
+          <button
+            onClick={() => (window.location.href = "/verify")}
+            className="relative z-10 mt-6 text-sm text-violet-600 hover:underline"
+          >
+            Explorar em modo demo
+          </button>
+
+          <p className="relative z-10 mt-8 max-w-xs text-center text-xs text-zinc-400">
+            Plataforma exclusiva para maiores de 18 anos.
+            Verificação de idade obrigatória.
           </p>
         </div>
-
-        <div className="w-full max-w-sm space-y-3">
-          <button
-            onClick={() => setMode("register")}
-            className="w-full rounded-lg bg-violet-600 px-4 py-3 font-medium text-white hover:bg-violet-700"
-          >
-            Criar conta
-          </button>
-          <button
-            onClick={() => setMode("login")}
-            className="w-full rounded-lg border border-zinc-300 px-4 py-3 font-medium hover:bg-zinc-50"
-          >
-            Entrar
-          </button>
-        </div>
-
-        <button
-          onClick={() => (window.location.href = "/verify")}
-          className="text-sm text-violet-600 hover:underline"
-        >
-          Explorar em modo demo
-        </button>
-
-        <p className="max-w-xs text-center text-sm text-zinc-500">
-          Plataforma exclusiva para maiores de 18 anos. Verificação de idade
-          obrigatória.
-        </p>
       </main>
     );
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6">
+    <main className="flex min-h-screen flex-col items-center justify-center px-6">
+      {/* Background gradient orbs */}
+      <div className="pointer-events-none fixed -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-200 opacity-30 blur-3xl" />
+      <div className="pointer-events-none fixed -bottom-24 right-1/4 h-72 w-72 rounded-full bg-pink-200 opacity-30 blur-3xl" />
+
       <form
         onSubmit={mode === "register" ? handleRegister : handleLogin}
-        className="w-full max-w-sm space-y-4"
+        className="relative z-10 w-full max-w-sm space-y-5 rounded-2xl border border-zinc-200 bg-white/80 p-8 shadow-xl backdrop-blur"
+        style={{ animation: "slide-up 0.4s ease-out" }}
       >
-        <h2 className="text-2xl font-semibold">
-          {mode === "register" ? "Criar conta" : "Entrar"}
-        </h2>
+        <div className="text-center">
+          <h2 className="bg-gradient-to-r from-violet-600 to-pink-500 bg-clip-text text-2xl font-bold text-transparent">
+            {mode === "register" ? "Criar conta" : "Bem-vindo de volta"}
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            {mode === "register"
+              ? "Junte-se à comunidade Knot"
+              : "Entre na sua conta"}
+          </p>
+        </div>
 
         {mode === "register" && (
           <div>
-            <label htmlFor="username" className="block text-sm font-medium">
+            <label htmlFor="username" className="block text-sm font-medium text-zinc-700">
               Pseudônimo
             </label>
             <input
@@ -124,17 +162,17 @@ export default function WelcomePage() {
               pattern="[a-zA-Z0-9_-]+"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
               placeholder="seu_pseudonimo"
             />
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="mt-1 text-xs text-zinc-400">
               Seu nome real nunca será exigido nem exibido.
             </p>
           </div>
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium">
+          <label htmlFor="email" className="block text-sm font-medium text-zinc-700">
             Email
           </label>
           <input
@@ -143,16 +181,16 @@ export default function WelcomePage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
             placeholder="seu@email.com"
           />
-          <p className="mt-1 text-xs text-zinc-500">
-            Seu email é privado e nunca será exibido a outros usuários.
+          <p className="mt-1 text-xs text-zinc-400">
+            Privado — nunca exibido a outros usuários.
           </p>
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium">
+          <label htmlFor="password" className="block text-sm font-medium text-zinc-700">
             Senha
           </label>
           <input
@@ -162,16 +200,21 @@ export default function WelcomePage() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-zinc-300 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-2.5 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            placeholder="Mínimo 8 caracteres"
           />
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-violet-600 px-4 py-3 font-medium text-white hover:bg-violet-700 disabled:opacity-50"
+          className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-3 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
         >
           {loading
             ? "Aguarde..."
@@ -180,14 +223,14 @@ export default function WelcomePage() {
               : "Entrar"}
         </button>
 
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 text-sm">
           <button
             type="button"
             onClick={() => {
               setMode(mode === "register" ? "login" : "register");
               setError("");
             }}
-            className="text-sm text-violet-600 hover:underline"
+            className="text-violet-600 hover:underline"
           >
             {mode === "register"
               ? "Já tem conta? Entrar"
@@ -196,7 +239,7 @@ export default function WelcomePage() {
           {mode === "login" && (
             <a
               href="/forgot-password"
-              className="text-sm text-zinc-500 hover:text-violet-600 hover:underline"
+              className="text-zinc-400 hover:text-violet-600 hover:underline"
             >
               Esqueceu a senha?
             </a>

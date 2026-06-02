@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const [password, setPassword] = useState("");
@@ -40,18 +40,18 @@ export default function ResetPasswordPage() {
 
   if (!token) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <div>
         <p className="text-zinc-500">Link inválido.</p>
         <Link href="/welcome" className="mt-2 text-sm text-violet-600 hover:underline">
           Voltar ao login
         </Link>
-      </main>
+      </div>
     );
   }
 
   if (done) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <div>
         <h1 className="text-2xl font-bold">Senha redefinida!</h1>
         <p className="mt-2 text-sm text-zinc-600">Agora você pode entrar com sua nova senha.</p>
         <Link
@@ -60,12 +60,12 @@ export default function ResetPasswordPage() {
         >
           Ir para login
         </Link>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+    <div>
       <h1 className="text-2xl font-bold">Nova senha</h1>
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <input
@@ -95,6 +95,16 @@ export default function ResetPasswordPage() {
           {loading ? "Redefinindo..." : "Redefinir senha"}
         </button>
       </form>
+    </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center px-6">
+      <Suspense fallback={<p className="text-zinc-500">Carregando...</p>}>
+        <ResetPasswordForm />
+      </Suspense>
     </main>
   );
 }

@@ -95,6 +95,9 @@ export async function GET(request: NextRequest) {
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
+  // Compute max score for percentage normalization
+  const maxScore = Math.max(1, ...scored.map((c) => c.score));
+
   return NextResponse.json({
     profiles: scored.map((c) => ({
       id: c.id,
@@ -104,6 +107,7 @@ export async function GET(request: NextRequest) {
       roleType: c.roleType,
       intent: c.intent,
       photo: c.photos[0]?.url ?? null,
+      compatibility: c.score > 0 ? Math.round((c.score / maxScore) * 100) : null,
     })),
   });
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { DEMO_PROFILES } from "@/lib/demo-data";
+import { ProfileCompleteness } from "@/components/profile-completeness";
 
 interface Profile {
   id: string;
@@ -12,6 +13,7 @@ interface Profile {
   roleType: string | null;
   intent: string[];
   photo: string | null;
+  compatibility?: number | null;
 }
 
 export default function DiscoverPage() {
@@ -100,6 +102,11 @@ export default function DiscoverPage() {
     <main className="mx-auto max-w-md px-6 py-10">
       <h1 className="text-2xl font-bold">Descobrir</h1>
 
+      {/* Profile completeness card */}
+      <div className="mt-4">
+        <ProfileCompleteness />
+      </div>
+
       {matchMsg && (
         <div className="mt-4 animate-bounce rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 p-4 text-center shadow-lg">
           <p className="text-lg font-bold text-white">{matchMsg}</p>
@@ -109,7 +116,7 @@ export default function DiscoverPage() {
 
       <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden">
         {/* Photo */}
-        <div className="aspect-square bg-zinc-200">
+        <div className="relative aspect-square bg-zinc-200">
           {current.photo ? (
             <img
               src={current.photo}
@@ -119,6 +126,16 @@ export default function DiscoverPage() {
           ) : (
             <div className="flex h-full items-center justify-center text-4xl text-zinc-400">
               {current.username[0]?.toUpperCase()}
+            </div>
+          )}
+          {current.compatibility != null && current.compatibility > 0 && (
+            <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur dark:bg-zinc-900/90">
+              <svg className="h-3.5 w-3.5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 01-3.744 2.582l-.019.01-.005.003h-.002a.723.723 0 01-.692 0h-.002z" />
+              </svg>
+              <span className="bg-gradient-to-r from-violet-600 to-pink-500 bg-clip-text text-transparent">
+                {current.compatibility}%
+              </span>
             </div>
           )}
         </div>

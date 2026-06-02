@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { DEMO_MATCHES } from "@/lib/demo-data";
 
 interface MatchItem {
   matchId: string;
@@ -16,12 +17,18 @@ export default function MatchesPage() {
 
   useEffect(() => {
     fetch("/api/matches")
-      .then((r) => r.json() as Promise<{ matches: MatchItem[] }>)
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<{ matches: MatchItem[] }>;
+      })
       .then((d) => {
-        setMatches(d.matches);
+        setMatches(d.matches.length > 0 ? d.matches : DEMO_MATCHES);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setMatches(DEMO_MATCHES);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {

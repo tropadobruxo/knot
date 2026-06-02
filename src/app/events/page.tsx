@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { DEMO_EVENTS } from "@/lib/demo-data";
 
 interface EventSummary {
   id: string;
@@ -45,12 +46,18 @@ export default function EventsPage() {
     params.set("page", String(page));
 
     fetch(`/api/events?${params.toString()}`)
-      .then((r) => r.json() as Promise<EventsResponse>)
-      .then((data) => {
-        setEvents(data.events);
-        setPages(data.pages);
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<EventsResponse>;
       })
-      .catch(() => {});
+      .then((data) => {
+        setEvents(data.events.length > 0 ? data.events : DEMO_EVENTS as unknown as EventSummary[]);
+        setPages(data.pages || 1);
+      })
+      .catch(() => {
+        setEvents(DEMO_EVENTS as unknown as EventSummary[]);
+        setPages(1);
+      });
   }, [city, type, page]);
 
   return (

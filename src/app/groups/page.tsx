@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { DEMO_GROUPS } from "@/lib/demo-data";
 
 interface GroupItem {
   id: string;
@@ -35,9 +36,20 @@ export default function GroupsPage() {
     params.set("page", String(page));
 
     fetch(`/api/groups?${params}`)
-      .then((r) => r.json() as Promise<GroupsResponse>)
-      .then(setData)
-      .catch(() => {});
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<GroupsResponse>;
+      })
+      .then((d) => {
+        if (d.groups.length > 0) {
+          setData(d);
+        } else {
+          setData({ groups: DEMO_GROUPS, total: DEMO_GROUPS.length, page: 1, pages: 1 });
+        }
+      })
+      .catch(() => {
+        setData({ groups: DEMO_GROUPS, total: DEMO_GROUPS.length, page: 1, pages: 1 });
+      });
   }, [city, page]);
 
   async function handleCreate(e: React.FormEvent) {

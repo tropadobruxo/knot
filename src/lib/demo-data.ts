@@ -8,7 +8,7 @@ export const DEMO_PROFILES = [
     city: "São Paulo",
     roleType: "dom",
     intent: ["relacionamento", "aprender"],
-    photo: "https://api.dicebear.com/9.x/avataaars/svg?seed=Luna&backgroundColor=b6e3f4",
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Luna&backgroundColor=b6e3f4&hair=variant01&earrings=variant01",
   },
   {
     id: "demo-2",
@@ -17,7 +17,7 @@ export const DEMO_PROFILES = [
     city: "Rio de Janeiro",
     roleType: "switch",
     intent: ["amizade", "aprender"],
-    photo: "https://api.dicebear.com/9.x/avataaars/svg?seed=Kai&backgroundColor=c0aede",
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Kai&backgroundColor=c0aede&hair=variant13",
   },
   {
     id: "demo-3",
@@ -26,7 +26,7 @@ export const DEMO_PROFILES = [
     city: "Belo Horizonte",
     roleType: "sub",
     intent: ["relacionamento"],
-    photo: "https://api.dicebear.com/9.x/avataaars/svg?seed=Velvet&backgroundColor=ffd5dc",
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Velvet&backgroundColor=ffd5dc&hair=variant17&earrings=variant03",
   },
   {
     id: "demo-4",
@@ -35,7 +35,7 @@ export const DEMO_PROFILES = [
     city: "Curitiba",
     roleType: "exploring",
     intent: ["aprender", "amizade"],
-    photo: "https://api.dicebear.com/9.x/avataaars/svg?seed=Storm&backgroundColor=d1f4d1",
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Storm&backgroundColor=d1f4d1&hair=variant09",
   },
   {
     id: "demo-5",
@@ -44,7 +44,7 @@ export const DEMO_PROFILES = [
     city: "São Paulo",
     roleType: "dom",
     intent: ["casual", "amizade"],
-    photo: "https://api.dicebear.com/9.x/avataaars/svg?seed=Raven&backgroundColor=ffdfbf",
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Raven&backgroundColor=ffdfbf&hair=variant05",
   },
   {
     id: "demo-6",
@@ -53,7 +53,25 @@ export const DEMO_PROFILES = [
     city: "São Paulo",
     roleType: "switch",
     intent: ["amizade", "casual"],
-    photo: "https://api.dicebear.com/9.x/avataaars/svg?seed=Jade&backgroundColor=b6e3f4",
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Jade&backgroundColor=b6e3f4&hair=variant20&earrings=variant02",
+  },
+  {
+    id: "demo-7",
+    username: "phoenix_sub",
+    bio: "Pet player e submissa devotional. Adoro protocolos e rituais diários. Amor por couro e latex. SP capital.",
+    city: "São Paulo",
+    roleType: "sub",
+    intent: ["relacionamento", "casual"],
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Phoenix&backgroundColor=ffeaa7&hair=variant11",
+  },
+  {
+    id: "demo-8",
+    username: "atlas_dom",
+    bio: "Dom protetor e educador. Conduzo workshops de comunicação e negociação de cenas. Segurança sempre em primeiro lugar.",
+    city: "Brasília",
+    roleType: "dom",
+    intent: ["aprender", "relacionamento"],
+    photo: "https://api.dicebear.com/9.x/lorelei/svg?seed=Atlas&backgroundColor=dfe6e9&hair=variant07",
   },
 ];
 
@@ -97,6 +115,32 @@ export const DEMO_EVENTS = [
     safetyInfo: "DMs (Dungeon Monitors) em todas as áreas. Consentimento verificado antes de qualquer cena.",
     organizer: { username: "raven_dom", organizer: { verified: true } },
   },
+  {
+    id: "evt-4",
+    type: "workshop",
+    title: "Comunicação e Negociação de Cenas",
+    city: "Brasília",
+    datetime: new Date(Date.now() + 10 * 86400000).toISOString(),
+    priceCents: 5000,
+    capacity: 20,
+    rsvpCount: 14,
+    description: "Workshop prático sobre como negociar cenas, estabelecer limites e comunicar desejos. Ideal para casais e iniciantes.",
+    safetyInfo: "Ambiente seguro e confidencial. Material didático incluso.",
+    organizer: { username: "atlas_dom", organizer: { verified: true } },
+  },
+  {
+    id: "evt-5",
+    type: "munch",
+    title: "Munch BH — Café & Kink",
+    city: "Belo Horizonte",
+    datetime: new Date(Date.now() + 5 * 86400000).toISOString(),
+    priceCents: 0,
+    capacity: 25,
+    rsvpCount: 9,
+    description: "Encontro casual em cafeteria para trocar experiências. Ambiente baunilha, conversa kink. Novatos super bem-vindos!",
+    safetyInfo: "Local público. Privacidade respeitada — sem fotos.",
+    organizer: { username: "velvet_sub", organizer: { verified: false } },
+  },
 ];
 
 export const DEMO_GROUPS = [
@@ -136,6 +180,24 @@ export const DEMO_GROUPS = [
     memberCount: 78,
     postCount: 45,
   },
+  {
+    id: "grp-5",
+    name: "Doms Responsáveis",
+    description: "Discussões sobre liderança, responsabilidade e ética na dominação. Mentoria entre dominantes experientes e novos.",
+    city: "Nacional",
+    moderated: true,
+    memberCount: 432,
+    postCount: 567,
+  },
+  {
+    id: "grp-6",
+    name: "Pet Play Brasil",
+    description: "Comunidade para pet players! Compartilhe fotos de coleiras, dicas de headspace e experiências de pet play.",
+    city: "Nacional",
+    moderated: true,
+    memberCount: 189,
+    postCount: 234,
+  },
 ];
 
 export const DEMO_MATCHES = [
@@ -143,13 +205,31 @@ export const DEMO_MATCHES = [
     matchId: "match-1",
     conversationId: "conv-1",
     createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-    user: { id: "demo-2", username: "kai_switch", image: null },
+    user: {
+      id: "demo-2",
+      username: "kai_switch",
+      image: "https://api.dicebear.com/9.x/lorelei/svg?seed=Kai&backgroundColor=c0aede&hair=variant13",
+    },
   },
   {
     matchId: "match-2",
     conversationId: "conv-2",
     createdAt: new Date(Date.now() - 5 * 86400000).toISOString(),
-    user: { id: "demo-3", username: "velvet_sub", image: null },
+    user: {
+      id: "demo-3",
+      username: "velvet_sub",
+      image: "https://api.dicebear.com/9.x/lorelei/svg?seed=Velvet&backgroundColor=ffd5dc&hair=variant17",
+    },
+  },
+  {
+    matchId: "match-3",
+    conversationId: "conv-3",
+    createdAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+    user: {
+      id: "demo-7",
+      username: "phoenix_sub",
+      image: "https://api.dicebear.com/9.x/lorelei/svg?seed=Phoenix&backgroundColor=ffeaa7&hair=variant11",
+    },
   },
 ];
 
@@ -170,8 +250,22 @@ export const DEMO_MESSAGES = [
   },
   {
     id: "msg-3",
-    content: "Fiz um intensivo ano passado, foi incrível. Posso te contar mais no munch de sábado se quiser 😊",
+    content: "Fiz um intensivo ano passado, foi incrível. Posso te contar mais no munch de sábado se quiser",
     createdAt: new Date(Date.now() - 70000000).toISOString(),
+    senderId: "demo-2",
+    sender: { username: "kai_switch" },
+  },
+  {
+    id: "msg-4",
+    content: "Adorei a ideia! Nunca fui num munch, como funciona?",
+    createdAt: new Date(Date.now() - 60000000).toISOString(),
+    senderId: "demo-me",
+    sender: { username: "você" },
+  },
+  {
+    id: "msg-5",
+    content: "É bem tranquilo! Pessoal se encontra num restaurante, conversa normal. Sem dress code, sem pressão. Você vai gostar!",
+    createdAt: new Date(Date.now() - 50000000).toISOString(),
     senderId: "demo-2",
     sender: { username: "kai_switch" },
   },

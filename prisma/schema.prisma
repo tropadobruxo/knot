@@ -105,9 +105,11 @@ model User {
   approxLng         Float?
 
   // Settings
+  role              String       @default("user") // user | moderator | admin
   premiumTier       PremiumTier  @default(free)
   discreetMode      Boolean      @default(false)
   status            UserStatus   @default(active)
+  stripeCustomerId  String?      @unique
 
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
@@ -145,6 +147,8 @@ model User {
   subscription      Subscription?
 
   codeOfConductAcceptedAt DateTime?
+
+  pushSubscriptions PushSubscription[]
 
   @@index([city])
   @@index([status])
@@ -284,11 +288,12 @@ model Conversation {
 }
 
 model Message {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   conversationId String
   senderId       String
   content        String
-  createdAt      DateTime @default(now())
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
@@ -458,18 +463,37 @@ model ModerationLog {
 }
 
 // ──────────────────────────────────────────────
+// Push Notifications
+// ──────────────────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ──────────────────────────────────────────────
 // Billing: Subscription
 // ──────────────────────────────────────────────
 
 model Subscription {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
-  tier               PremiumTier        @default(plus)
-  status             SubscriptionStatus @default(active)
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  tier                 PremiumTier        @default(plus)
+  status               SubscriptionStatus @default(active)
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

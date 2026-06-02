@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/db";
 import { updateReportSchema } from "@/lib/trust-safety";
 import type { ModerationAction, UserStatus } from "@/generated/prisma/client";
@@ -8,10 +8,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  }
+  const result = await requireAdmin();
+  if ("error" in result) return result.error;
 
   const { id } = await params;
 

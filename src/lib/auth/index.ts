@@ -55,12 +55,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ageVerified: true,
             username: true,
             status: true,
+            role: true,
           },
         });
         if (dbUser) {
           token.ageVerified = dbUser.ageVerified;
           token.username = dbUser.username;
           token.status = dbUser.status;
+          token.role = dbUser.role;
         }
       }
       return token;
@@ -70,6 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub;
         session.user.ageVerified = token.ageVerified ?? false;
         session.user.username = token.username ?? "";
+        session.user.role = token.role ?? "user";
       }
       return session;
     },

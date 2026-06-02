@@ -6,6 +6,7 @@ import {
   calculatePeriod,
   PLUS_PRICE_CENTS,
 } from "@/lib/billing";
+import { createCheckoutSession, getStripe } from "@/lib/stripe";
 
 export async function GET() {
   const session = await auth();
@@ -27,12 +28,13 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { premiumTier: true },
+    select: { premiumTier: true, stripeCustomerId: true },
   });
 
   return NextResponse.json({
     subscription,
     currentTier: user?.premiumTier ?? "free",
+    hasStripe: !!user?.stripeCustomerId,
   });
 }
 
@@ -40,12 +42,6 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  }
-
-  const body: unknown = await request.json();
-  const parsed = createSubscriptionSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
   // Check existing active subscription
@@ -59,10 +55,35 @@ export async function POST(request: Request) {
     );
   }
 
+  // If Stripe is configured, redirect to Checkout
+  if (getStripe() && process.env.STRIPE_PRICE_ID) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { email: true, stripeCustomerId: true },
+    });
+    if (!user) {
+      return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
+    }
+
+    const url = await createCheckoutSession(
+      session.user.id,
+      user.email,
+      user.stripeCustomerId,
+    );
+    if (url) {
+      return NextResponse.json({ checkoutUrl: url });
+    }
+  }
+
+  // Fallback: simulate payment (dev/demo mode)
+  const body: unknown = await request.json();
+  const parsed = createSubscriptionSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
+  }
+
   const { start, end } = calculatePeriod(new Date());
 
-  // MVP: simulate payment success
-  // In production, integrate with Stripe/payment gateway here
   const subscription = await prisma.subscription.upsert({
     where: { userId: session.user.id },
     create: {
@@ -81,7 +102,6 @@ export async function POST(request: Request) {
     select: { id: true, tier: true, status: true, currentPeriodEnd: true },
   });
 
-  // Update user tier
   await prisma.user.update({
     where: { id: session.user.id },
     data: { premiumTier: "plus" },
@@ -114,12 +134,26 @@ export async function DELETE() {
     );
   }
 
+  // If Stripe subscription, cancel via Stripe (webhook will handle the rest)
+  if (subscription.stripeSubscriptionId) {
+    const stripe = getStripe();
+    if (stripe) {
+      await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
+      return NextResponse.json({
+        cancelled: true,
+        message: "Assinatura cancelada. Acesso Plus até o fim do período.",
+      });
+    }
+  }
+
+  // Fallback: immediate cancel
   await prisma.subscription.update({
     where: { userId: session.user.id },
     data: { status: "cancelled" },
   });
 
-  // Downgrade user at period end (for MVP, downgrade immediately)
   await prisma.user.update({
     where: { id: session.user.id },
     data: { premiumTier: "free" },
@@ -127,6 +161,6 @@ export async function DELETE() {
 
   return NextResponse.json({
     cancelled: true,
-    message: "Assinatura cancelada. Acesso Plus até o fim do período.",
+    message: "Assinatura cancelada.",
   });
 }

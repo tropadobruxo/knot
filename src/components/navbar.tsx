@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { href: "/matches", label: "Matches" },
   { href: "/groups", label: "Grupos" },
   { href: "/events", label: "Eventos" },
-  { href: "/premium", label: "Plus" },
+  { href: "/search", label: "Buscar" },
   { href: "/profile/edit", label: "Perfil" },
 ];
 

@@ -180,18 +180,28 @@ export default function WelcomePage() {
               : "Entrar"}
         </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === "register" ? "login" : "register");
-            setError("");
-          }}
-          className="w-full text-sm text-violet-600 hover:underline"
-        >
-          {mode === "register"
-            ? "Já tem conta? Entrar"
-            : "Não tem conta? Criar"}
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setMode(mode === "register" ? "login" : "register");
+              setError("");
+            }}
+            className="text-sm text-violet-600 hover:underline"
+          >
+            {mode === "register"
+              ? "Já tem conta? Entrar"
+              : "Não tem conta? Criar"}
+          </button>
+          {mode === "login" && (
+            <a
+              href="/forgot-password"
+              className="text-sm text-zinc-500 hover:text-violet-600 hover:underline"
+            >
+              Esqueceu a senha?
+            </a>
+          )}
+        </div>
       </form>
     </main>
   );

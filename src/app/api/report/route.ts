@@ -2,12 +2,16 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createReportSchema, validateReport } from "@/lib/trust-safety";
+import { reportLimiter, checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
+
+  const rateLimited = await checkRateLimit(reportLimiter, session.user.id);
+  if (rateLimited) return rateLimited;
 
   const body: unknown = await request.json();
   const parsed = createReportSchema.safeParse(body);

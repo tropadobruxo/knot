@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { scoreCandidate } from "@/lib/discovery/scoring";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -42,13 +43,28 @@ export async function GET(request: NextRequest) {
   for (const b of blockedByMe) excludeIds.add(b.targetId);
   for (const b of blockedMe) excludeIds.add(b.creatorId);
 
+  // Get viewer's profile for scoring
+  const viewer = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      city: true,
+      roleType: true,
+      intent: true,
+      lastActive: true,
+      interests: { select: { interestId: true, level: true } },
+    },
+  });
+
+  // Fetch more candidates than needed, then score and sort
+  const fetchLimit = Math.min(limit * 3, 60);
+
   const candidates = await prisma.user.findMany({
     where: {
       id: { notIn: Array.from(excludeIds) },
       status: "active",
       ageVerified: true,
     },
-    take: limit,
+    take: fetchLimit,
     orderBy: { lastActive: "desc" },
     select: {
       id: true,
@@ -57,6 +73,8 @@ export async function GET(request: NextRequest) {
       city: true,
       roleType: true,
       intent: true,
+      lastActive: true,
+      interests: { select: { interestId: true, level: true } },
       photos: {
         where: { visibility: "public" },
         take: 1,
@@ -66,11 +84,26 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  return NextResponse.json({
-    profiles: candidates.map((c) => ({
+  // Score and sort by compatibility
+  const viewerProfile = viewer ?? { city: null, roleType: null, intent: [], interests: [], lastActive: new Date() };
+
+  const scored = candidates
+    .map((c) => ({
       ...c,
+      score: scoreCandidate(viewerProfile, c),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+
+  return NextResponse.json({
+    profiles: scored.map((c) => ({
+      id: c.id,
+      username: c.username,
+      bio: c.bio,
+      city: c.city,
+      roleType: c.roleType,
+      intent: c.intent,
       photo: c.photos[0]?.url ?? null,
-      photos: undefined,
     })),
   });
 }

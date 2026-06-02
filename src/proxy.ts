@@ -4,8 +4,12 @@ import { auth } from "@/lib/auth";
 const PUBLIC_PATHS = [
   "/welcome",
   "/verify",
+  "/forgot-password",
+  "/reset-password",
   "/api/auth",
   "/api/verification",
+  "/api/uploadthing",
+  "/api/stripe/webhook",
   "/manifest.json",
   "/_next",
   "/favicon.ico",
@@ -37,6 +41,12 @@ export async function proxy(request: NextRequest) {
 
   if (!session.user.ageVerified) {
     return NextResponse.redirect(new URL("/verify", request.url));
+  }
+
+  // Block banned users
+  const token = session as unknown as { user?: { status?: string } };
+  if (token.user?.status === "banned") {
+    return NextResponse.redirect(new URL("/welcome?banned=true", request.url));
   }
 
   return NextResponse.next();

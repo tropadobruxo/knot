@@ -8,6 +8,7 @@ declare module "next-auth" {
       email: string;
       username: string;
       ageVerified: boolean;
+      role: string;
     };
   }
 }
@@ -17,5 +18,6 @@ declare module "next-auth/jwt" {
     ageVerified?: boolean;
     username?: string;
     status?: string;
+    role?: string;
   }
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PhotoUploader } from "@/components/PhotoUploader";
 
 interface Photo {
   id: string;
@@ -16,30 +17,31 @@ const VISIBILITY_OPTIONS = [
   { value: "private", label: "Privada" },
 ] as const;
 
+const MAX_PHOTOS = 6;
+
 export default function EditPhotosPage() {
   const router = useRouter();
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const [newUrl, setNewUrl] = useState("");
   const [newVisibility, setNewVisibility] = useState("public");
-  const [loading, setLoading] = useState(false);
 
-  async function addPhoto() {
-    if (!newUrl.trim()) return;
-    setLoading(true);
+  useEffect(() => {
+    fetch("/api/profile/photos")
+      .then((r) => (r.ok ? (r.json() as Promise<{ photos: Photo[] }>) : null))
+      .then((d) => { if (d) setPhotos(d.photos); })
+      .catch(() => {});
+  }, []);
 
+  async function handleUploaded(url: string) {
     const res = await fetch("/api/profile/photos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: newUrl, visibility: newVisibility }),
+      body: JSON.stringify({ url, visibility: newVisibility }),
     });
 
     if (res.ok) {
       const photo = (await res.json()) as Photo;
       setPhotos((prev) => [...prev, photo]);
-      setNewUrl("");
     }
-
-    setLoading(false);
   }
 
   async function updateVisibility(id: string, visibility: string) {
@@ -63,7 +65,7 @@ export default function EditPhotosPage() {
     <main className="mx-auto max-w-lg px-6 py-10">
       <h1 className="text-2xl font-bold">Fotos</h1>
       <p className="mt-1 text-sm text-zinc-500">
-        Controle quem pode ver cada foto.
+        Controle quem pode ver cada foto. Máximo {MAX_PHOTOS} fotos.
       </p>
 
       <div className="mt-6 space-y-4">
@@ -102,36 +104,28 @@ export default function EditPhotosPage() {
         ))}
       </div>
 
-      <div className="mt-6 space-y-3 rounded-lg border border-zinc-200 p-4">
-        <p className="text-sm font-medium">Adicionar foto</p>
-        <input
-          type="url"
-          value={newUrl}
-          onChange={(e) => setNewUrl(e.target.value)}
-          placeholder="URL da imagem"
-          className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-        />
-        <div className="flex items-center gap-3">
-          <select
-            value={newVisibility}
-            onChange={(e) => setNewVisibility(e.target.value)}
-            className="rounded border border-zinc-300 px-2 py-1 text-sm"
-          >
-            {VISIBILITY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={addPhoto}
-            disabled={loading || !newUrl.trim()}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
-          >
-            Adicionar
-          </button>
+      {photos.length < MAX_PHOTOS && (
+        <div className="mt-6 space-y-3 rounded-lg border border-zinc-200 p-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium">Visibilidade:</span>
+            <select
+              value={newVisibility}
+              onChange={(e) => setNewVisibility(e.target.value)}
+              className="rounded border border-zinc-300 px-2 py-1 text-sm"
+            >
+              {VISIBILITY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <PhotoUploader
+            onUploaded={handleUploaded}
+            disabled={photos.length >= MAX_PHOTOS}
+          />
         </div>
-      </div>
+      )}
 
       <button
         onClick={() => router.back()}

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { sendMessageSchema } from "@/lib/discovery";
+import { messageLimiter, checkRateLimit } from "@/lib/rate-limit";
+import { sendPushToUser } from "@/lib/push";
 
 export async function POST(
   request: Request,
@@ -11,6 +13,9 @@ export async function POST(
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
+
+  const rateLimited = await checkRateLimit(messageLimiter, session.user.id);
+  if (rateLimited) return rateLimited;
 
   const { conversationId } = await params;
   const userId = session.user.id;
@@ -53,6 +58,16 @@ export async function POST(
       createdAt: true,
       sender: { select: { username: true } },
     },
+  });
+
+  // Send push to the other user
+  const recipientId = conversation.match.userAId === userId
+    ? conversation.match.userBId
+    : conversation.match.userAId;
+  void sendPushToUser(recipientId, {
+    title: "Nova mensagem",
+    body: parsed.data.content.slice(0, 100),
+    url: `/chat/${conversationId}`,
   });
 
   return NextResponse.json(message, { status: 201 });

@@ -13,6 +13,7 @@ interface SubscriptionData {
     currentPeriodEnd: string;
   } | null;
   currentTier: string;
+  hasStripe: boolean;
 }
 
 export default function SubscriptionPage() {
@@ -36,11 +37,18 @@ export default function SubscriptionPage() {
     if (res.ok) {
       const d = (await res.json()) as { message: string };
       setMessage(d.message);
-      // Reload
       const r = await fetch("/api/subscription");
       setData((await r.json()) as SubscriptionData);
     }
     setCancelling(false);
+  }
+
+  async function handleManageBilling() {
+    const res = await fetch("/api/stripe/portal", { method: "POST" });
+    if (res.ok) {
+      const { url } = (await res.json()) as { url: string };
+      window.location.href = url;
+    }
   }
 
   if (!data) {
@@ -92,13 +100,23 @@ export default function SubscriptionPage() {
         )}
 
         {isActive && (
-          <button
-            onClick={handleCancel}
-            disabled={cancelling}
-            className="mt-4 rounded border border-red-300 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
-          >
-            {cancelling ? "Cancelando..." : "Cancelar assinatura"}
-          </button>
+          <div className="mt-4 flex gap-2">
+            {data.hasStripe && (
+              <button
+                onClick={handleManageBilling}
+                className="rounded border border-zinc-300 px-4 py-1.5 text-sm hover:bg-zinc-50"
+              >
+                Gerenciar pagamento
+              </button>
+            )}
+            <button
+              onClick={handleCancel}
+              disabled={cancelling}
+              className="rounded border border-red-300 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              {cancelling ? "Cancelando..." : "Cancelar"}
+            </button>
+          </div>
         )}
 
         {!isActive && data.currentTier === "free" && (

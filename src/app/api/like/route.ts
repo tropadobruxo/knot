@@ -2,12 +2,19 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createLikeSchema, validateLike } from "@/lib/discovery";
+import { likeLimiter, checkRateLimit } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email";
+import { matchNotificationEmail } from "@/lib/email/templates";
+import { sendPushToUser } from "@/lib/push";
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
+
+  const rateLimited = await checkRateLimit(likeLimiter, session.user.id);
+  if (rateLimited) return rateLimited;
 
   const body: unknown = await request.json();
   const parsed = createLikeSchema.safeParse(body);
@@ -84,6 +91,19 @@ export async function POST(request: Request) {
 
       matched = true;
       conversationId = conversation.id;
+
+      // Send match notifications (non-blocking)
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      const [me, them] = await Promise.all([
+        prisma.user.findUnique({ where: { id: userId }, select: { username: true, email: true } }),
+        prisma.user.findUnique({ where: { id: targetId }, select: { username: true, email: true } }),
+      ]);
+      if (me && them) {
+        void sendEmail(them.email, "Novo match no Knot!", matchNotificationEmail(them.username, me.username, baseUrl));
+        void sendEmail(me.email, "Novo match no Knot!", matchNotificationEmail(me.username, them.username, baseUrl));
+        void sendPushToUser(targetId, { title: "Novo match!", body: `Você e ${me.username} deram match!`, url: "/matches" });
+        void sendPushToUser(userId, { title: "Novo match!", body: `Você e ${them.username} deram match!`, url: "/matches" });
+      }
     }
   }
 

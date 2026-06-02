@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdmin } from "@/lib/auth/require-admin";
 import { prisma } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  }
-
-  // Admin check: only users with status "active" and specific role
-  // For now, we check a simple admin flag via email domain or a dedicated field
-  // Using a pragmatic approach: first user created is admin (id-based)
-  // TODO: add proper admin role to User model
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-  if (!user) {
-    return NextResponse.json({ error: "Não autorizado." }, { status: 403 });
-  }
+  const result = await requireAdmin();
+  if ("error" in result) return result.error;
 
   const { searchParams } = request.nextUrl;
   const status = searchParams.get("status");

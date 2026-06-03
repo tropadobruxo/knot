@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ProfileCompleteness } from "@/components/profile-completeness";
@@ -139,6 +139,10 @@ export default function DiscoverPage() {
   const [filterCity, setFilterCity] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [filterIntent, setFilterIntent] = useState("");
+  const [swipeX, setSwipeX] = useState(0);
+  const [swiping, setSwiping] = useState(false);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/discover?limit=20")
@@ -225,6 +229,71 @@ export default function DiscoverPage() {
     setFilterIntent("");
     setIndex(0);
   }
+
+  const SWIPE_THRESHOLD = 80;
+
+  function onTouchStart(e: React.TouchEvent) {
+    const touch = e.touches[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
+    setSwiping(true);
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (!touchStartRef.current) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = Math.abs(touch.clientY - touchStartRef.current.y);
+    // Only swipe horizontally if not scrolling vertically
+    if (dy > Math.abs(dx) && Math.abs(dx) < 20) return;
+    setSwipeX(dx);
+  }
+
+  function onTouchEnd() {
+    if (!touchStartRef.current) return;
+    if (swipeX > SWIPE_THRESHOLD) {
+      handleLike();
+    } else if (swipeX < -SWIPE_THRESHOLD) {
+      handlePass();
+    }
+    setSwipeX(0);
+    setSwiping(false);
+    touchStartRef.current = null;
+  }
+
+  // Mouse drag support for desktop
+  function onMouseDown(e: React.MouseEvent) {
+    touchStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+    setSwiping(true);
+
+    function onMouseMove(ev: MouseEvent) {
+      if (!touchStartRef.current) return;
+      setSwipeX(ev.clientX - touchStartRef.current.x);
+    }
+
+    function onMouseUp() {
+      if (touchStartRef.current) {
+        const finalX = swipeX;
+        if (finalX > SWIPE_THRESHOLD) {
+          handleLike();
+        } else if (finalX < -SWIPE_THRESHOLD) {
+          handlePass();
+        }
+      }
+      setSwipeX(0);
+      setSwiping(false);
+      touchStartRef.current = null;
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    }
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+  }
+
+  const swipeRotation = swipeX * 0.1;
+  const swipeOpacity = Math.max(0, 1 - Math.abs(swipeX) / 300);
 
   if (loading) {
     return (
@@ -385,7 +454,30 @@ export default function DiscoverPage() {
         />
       )}
 
-      <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700 animate-card-enter">
+      <div
+        ref={cardRef}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        onMouseDown={onMouseDown}
+        className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700 animate-card-enter select-none cursor-grab active:cursor-grabbing"
+        style={{
+          transform: `translateX(${swipeX}px) rotate(${swipeRotation}deg)`,
+          opacity: swipeOpacity,
+          transition: swiping ? "none" : "transform 0.3s ease, opacity 0.3s ease",
+        }}
+      >
+        {/* Swipe indicators */}
+        {swipeX > 30 && (
+          <div className="absolute left-4 top-4 z-30 rounded-lg border-2 border-green-400 bg-green-400/20 px-3 py-1 text-lg font-bold text-green-400 backdrop-blur" style={{ transform: `rotate(-15deg)` }}>
+            CURTIR
+          </div>
+        )}
+        {swipeX < -30 && (
+          <div className="absolute right-4 top-4 z-30 rounded-lg border-2 border-red-400 bg-red-400/20 px-3 py-1 text-lg font-bold text-red-400 backdrop-blur" style={{ transform: `rotate(15deg)` }}>
+            PASSAR
+          </div>
+        )}
         {/* Photo Gallery */}
         <div className="relative aspect-[3/4] bg-zinc-200 dark:bg-zinc-800">
           {current.photos.length > 0 ? (

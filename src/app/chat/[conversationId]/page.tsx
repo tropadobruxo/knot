@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useChatStream } from "@/lib/messaging/use-chat-stream";
 
 export default function ChatPage() {
@@ -12,9 +13,62 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [demoMode, setDemoMode] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { messages, isConnected, addOptimistic } = useChatStream(conversationId);
+
+  // Send typing indicator
+  const sendTypingSignal = useCallback(() => {
+    if (demoMode) return;
+    fetch(`/api/conversations/${conversationId}/typing`, { method: "POST" }).catch(() => {});
+  }, [conversationId, demoMode]);
+
+  function handleInputChange(value: string) {
+    setNewMessage(value);
+    sendTypingSignal();
+  }
+
+  // Poll typing status from other user
+  useEffect(() => {
+    if (demoMode) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/conversations/${conversationId}/typing`);
+        if (res.ok) {
+          const data = (await res.json()) as { typing: boolean };
+          setOtherTyping(data.typing);
+          if (data.typing) {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => setOtherTyping(false), 4000);
+          }
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [conversationId, demoMode]);
+
+  // Mark messages as read
+  useEffect(() => {
+    if (demoMode || messages.length === 0) return;
+    fetch(`/api/conversations/${conversationId}/read`, { method: "POST" }).catch(() => {});
+  }, [conversationId, demoMode, messages.length]);
+
+  // Handle image selection
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      setError("Imagem deve ter no maximo 4MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  }
 
   // Load conversation metadata
   useEffect(() => {
@@ -38,7 +92,8 @@ export default function ChatPage() {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    const content = imagePreview ?? newMessage.trim();
+    if (!content) return;
 
     setSending(true);
     setError("");
@@ -54,7 +109,7 @@ export default function ChatPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: newMessage }),
+          body: JSON.stringify({ content }),
         },
       );
 
@@ -67,11 +122,13 @@ export default function ChatPage() {
         };
         addOptimistic({ ...msg, senderId: "me" });
         setNewMessage("");
+        setImagePreview(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
       } else {
         setError("Falha ao enviar.");
       }
     } catch {
-      setError("Erro de conexão.");
+      setError("Erro de conexao.");
     }
 
     setSending(false);
@@ -152,31 +209,89 @@ export default function ChatPage() {
                   className={`max-w-[75%] px-4 py-2.5 ${
                     isMe
                       ? "rounded-2xl rounded-br-md bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-sm"
-                      : "rounded-2xl rounded-bl-md bg-zinc-100 text-zinc-800"
+                      : "rounded-2xl rounded-bl-md bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100"
                   }`}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  {msg.content.startsWith("data:image/") || msg.content.startsWith("https://") && /\.(jpg|jpeg|png|gif|webp)/i.test(msg.content) ? (
+                    <div className="relative h-48 w-48 overflow-hidden rounded-lg">
+                      <Image src={msg.content} alt="Imagem" fill className="object-cover" unoptimized />
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  )}
+                  {isMe && (
+                    <div className="mt-0.5 flex justify-end">
+                      <svg className={`h-3.5 w-3.5 ${idx === displayMessages.length - 1 ? "text-blue-300" : "text-white/50"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           );
         })}
+        {/* Typing indicator */}
+        {otherTyping && (
+          <div className="mb-1 flex justify-start">
+            <div className="flex items-center gap-1 rounded-2xl rounded-bl-md bg-zinc-100 px-4 py-3 dark:bg-zinc-700">
+              <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: "0ms" }} />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: "150ms" }} />
+              <span className="h-2 w-2 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: "300ms" }} />
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Image preview */}
+      {imagePreview && (
+        <div className="mt-2 flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-700 dark:bg-zinc-800">
+          <div className="relative h-16 w-16 overflow-hidden rounded-lg">
+            <Image src={imagePreview} alt="Preview" fill className="object-cover" unoptimized />
+          </div>
+          <span className="flex-1 text-xs text-zinc-500">Imagem anexada</span>
+          <button
+            type="button"
+            onClick={() => { setImagePreview(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-200 hover:text-zinc-600"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Input */}
       <form onSubmit={handleSend} className="mt-2 flex items-center gap-2">
         <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={handleImageSelect}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-zinc-200 text-zinc-400 transition hover:bg-zinc-50 hover:text-violet-500 dark:border-zinc-700 dark:hover:bg-zinc-800"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+          </svg>
+        </button>
+        <input
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={(e) => handleInputChange(e.target.value)}
           placeholder="Escreva uma mensagem..."
-          className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm transition focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-100"
+          className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm transition focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-100 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:bg-zinc-700"
           maxLength={5000}
         />
         <button
           type="submit"
-          disabled={sending || !newMessage.trim()}
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 text-white shadow-md transition hover:shadow-lg active:scale-95 disabled:opacity-40"
+          disabled={sending || (!newMessage.trim() && !imagePreview)}
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 text-white shadow-md transition hover:shadow-lg active:scale-95 disabled:opacity-40"
         >
           {sending ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

@@ -38,6 +38,97 @@ const INTENT_OPTIONS = [
   { value: "casual", label: "Casual" },
 ];
 
+const PREVIEW_PROFILES: Profile[] = [
+  {
+    id: "preview-1", username: "luna_rope",
+    bio: "Artista de shibari, explorando conexões através de cordas e confiança. SP capital.",
+    city: "São Paulo", roleType: "dom", intent: ["relacionamento", "aprender"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=luna_rope_0", verified: true },
+      { url: "https://api.dicebear.com/9.x/avataaars/svg?seed=luna_rope_1", verified: false },
+      { url: "https://api.dicebear.com/9.x/bottts/svg?seed=luna_rope_2", verified: false },
+    ],
+    compatibility: 92,
+  },
+  {
+    id: "preview-2", username: "kai_switch",
+    bio: "Switch versátil, curto workshops e munches. Fotógrafo nas horas vagas.",
+    city: "Rio de Janeiro", roleType: "switch", intent: ["amizade", "casual"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=kai_switch_0", verified: true },
+      { url: "https://api.dicebear.com/9.x/avataaars/svg?seed=kai_switch_1", verified: false },
+      { url: "https://api.dicebear.com/9.x/micah/svg?seed=kai_switch_2", verified: false },
+      { url: "https://api.dicebear.com/9.x/bottts/svg?seed=kai_switch_3", verified: false },
+    ],
+    compatibility: 87,
+  },
+  {
+    id: "preview-3", username: "selene_sub",
+    bio: "Submissa, buscando dinâmica D/s com segurança e carinho. Adoro pet play.",
+    city: "Belo Horizonte", roleType: "sub", intent: ["relacionamento"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=selene_sub_0", verified: true },
+      { url: "https://api.dicebear.com/9.x/micah/svg?seed=selene_sub_1", verified: false },
+    ],
+    compatibility: 78,
+  },
+  {
+    id: "preview-4", username: "thor_dom",
+    bio: "Dominante experiente, mentor de novos praticantes. Educação e consentimento sempre.",
+    city: "São Paulo", roleType: "dom", intent: ["aprender", "amizade"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/avataaars/svg?seed=thor_dom_0", verified: true },
+      { url: "https://api.dicebear.com/9.x/bottts/svg?seed=thor_dom_1", verified: false },
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=thor_dom_2", verified: false },
+      { url: "https://api.dicebear.com/9.x/micah/svg?seed=thor_dom_3", verified: false },
+      { url: "https://api.dicebear.com/9.x/personas/svg?seed=thor_dom_4", verified: false },
+    ],
+    compatibility: 95,
+  },
+  {
+    id: "preview-5", username: "iris_explore",
+    bio: "Curiosa e recém-chegada ao universo kink. Aqui pra aprender sem julgamentos.",
+    city: "Curitiba", roleType: "exploring", intent: ["aprender", "amizade"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/micah/svg?seed=iris_explore_0", verified: false },
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=iris_explore_1", verified: false },
+    ],
+    compatibility: 65,
+  },
+  {
+    id: "preview-6", username: "fenix_primal",
+    bio: "Primal play e impacto. Adoro festas e eventos presenciais. Salvador representando.",
+    city: "Salvador", roleType: "switch", intent: ["casual", "amizade"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=fenix_primal_0", verified: true },
+      { url: "https://api.dicebear.com/9.x/avataaars/svg?seed=fenix_primal_1", verified: false },
+      { url: "https://api.dicebear.com/9.x/bottts/svg?seed=fenix_primal_2", verified: false },
+    ],
+    compatibility: 81,
+  },
+  {
+    id: "preview-7", username: "maya_rope",
+    bio: "Rigger e modelo de shibari. Ensino bondage seguro para iniciantes.",
+    city: "Porto Alegre", roleType: "dom", intent: ["aprender", "relacionamento"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/micah/svg?seed=maya_rope_0", verified: true },
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=maya_rope_1", verified: false },
+      { url: "https://api.dicebear.com/9.x/avataaars/svg?seed=maya_rope_2", verified: false },
+    ],
+    compatibility: 88,
+  },
+  {
+    id: "preview-8", username: "neo_latex",
+    bio: "Fetichista por latex e couro. Designer de moda alternativa.",
+    city: "São Paulo", roleType: "sub", intent: ["casual"],
+    photos: [
+      { url: "https://api.dicebear.com/9.x/bottts/svg?seed=neo_latex_0", verified: false },
+      { url: "https://api.dicebear.com/9.x/adventurer/svg?seed=neo_latex_1", verified: false },
+    ],
+    compatibility: 72,
+  },
+];
+
 export default function DiscoverPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [index, setIndex] = useState(0);
@@ -56,11 +147,11 @@ export default function DiscoverPage() {
         return r.json() as Promise<{ profiles: Profile[] }>;
       })
       .then((d) => {
-        setProfiles(d.profiles);
+        setProfiles(d.profiles.length > 0 ? d.profiles : PREVIEW_PROFILES);
         setLoading(false);
       })
       .catch(() => {
-        setProfiles([]);
+        setProfiles(PREVIEW_PROFILES);
         setLoading(false);
       });
   }, []);

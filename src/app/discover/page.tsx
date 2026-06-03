@@ -6,6 +6,11 @@ import Link from "next/link";
 import { ProfileCompleteness } from "@/components/profile-completeness";
 import { MatchCelebration } from "@/components/match-celebration";
 
+interface ProfilePhoto {
+  url: string;
+  verified: boolean;
+}
+
 interface Profile {
   id: string;
   username: string;
@@ -13,7 +18,7 @@ interface Profile {
   city: string | null;
   roleType: string | null;
   intent: string[];
-  photo: string | null;
+  photos: ProfilePhoto[];
   compatibility?: number | null;
 }
 
@@ -38,6 +43,7 @@ export default function DiscoverPage() {
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [matchUsername, setMatchUsername] = useState<string | null>(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [filterCity, setFilterCity] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -113,11 +119,13 @@ export default function DiscoverPage() {
     }
 
     setIndex((i) => i + 1);
+    setPhotoIndex(0);
   }
 
   function handlePass() {
     haptic(5);
     setIndex((i) => i + 1);
+    setPhotoIndex(0);
   }
 
   function clearFilters() {
@@ -268,24 +276,77 @@ export default function DiscoverPage() {
         />
       )}
 
-      <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700">
-        {/* Photo */}
-        <div className="relative aspect-square bg-zinc-200">
-          {current.photo ? (
-            <Image
-              src={current.photo}
-              alt={current.username}
-              fill
-              className="object-cover"
-              unoptimized={current.photo.includes("dicebear")}
-            />
+      <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700 animate-card-enter">
+        {/* Photo Gallery */}
+        <div className="relative aspect-[3/4] bg-zinc-200 dark:bg-zinc-800">
+          {current.photos.length > 0 ? (
+            <>
+              <Image
+                key={current.photos[photoIndex]?.url}
+                src={current.photos[photoIndex]?.url ?? ""}
+                alt={`${current.username} — foto ${photoIndex + 1}`}
+                fill
+                className="object-cover transition-opacity duration-300"
+                unoptimized={current.photos[photoIndex]?.url.includes("dicebear") ?? false}
+              />
+              {/* Tap zones to navigate photos */}
+              {current.photos.length > 1 && (
+                <>
+                  <button
+                    aria-label="Foto anterior"
+                    className="absolute inset-y-0 left-0 w-1/3 z-10"
+                    onClick={(e) => { e.stopPropagation(); setPhotoIndex((i) => Math.max(0, i - 1)); }}
+                  />
+                  <button
+                    aria-label="Proxima foto"
+                    className="absolute inset-y-0 right-0 w-1/3 z-10"
+                    onClick={(e) => { e.stopPropagation(); setPhotoIndex((i) => Math.min(current.photos.length - 1, i + 1)); }}
+                  />
+                </>
+              )}
+              {/* Photo dots */}
+              {current.photos.length > 1 && (
+                <div className="absolute top-3 left-1/2 z-20 flex -translate-x-1/2 gap-1">
+                  {current.photos.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-1 rounded-full transition-all duration-300 ${
+                        i === photoIndex ? "w-6 bg-white" : "w-1.5 bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+              {/* Verified badge */}
+              {current.photos[photoIndex]?.verified && (
+                <div className="absolute left-3 top-3 z-20 flex items-center gap-1 rounded-full bg-blue-500/90 px-2 py-0.5 text-[10px] font-semibold text-white shadow backdrop-blur">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.403 12.652a3 3 0 010-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                  </svg>
+                  Verificada
+                </div>
+              )}
+              {/* Photo count */}
+              {current.photos.length > 1 && (
+                <div className="absolute bottom-3 right-3 z-20 rounded-full bg-black/50 px-2 py-0.5 text-xs font-medium text-white backdrop-blur">
+                  {photoIndex + 1} / {current.photos.length}
+                </div>
+              )}
+            </>
           ) : (
-            <div className="flex h-full items-center justify-center text-4xl text-zinc-400">
-              {current.username[0]?.toUpperCase()}
+            <div className="flex h-full flex-col items-center justify-center gap-2">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-200 to-pink-200 text-4xl font-bold text-violet-500">
+                {current.username[0]?.toUpperCase()}
+              </div>
+              <span className="text-xs text-zinc-400">Sem foto</span>
             </div>
           )}
+          {/* Gradient overlay at bottom for readability */}
+          {current.photos.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+          )}
           {current.compatibility != null && current.compatibility > 0 && (
-            <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur dark:bg-zinc-900/90">
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold shadow-md backdrop-blur dark:bg-zinc-900/90">
               <svg className="h-3.5 w-3.5 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.653 16.915l-.005-.003-.019-.01a20.759 20.759 0 01-1.162-.682 22.045 22.045 0 01-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 018-2.828A4.5 4.5 0 0118 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 01-3.744 2.582l-.019.01-.005.003h-.002a.723.723 0 01-.692 0h-.002z" />
               </svg>

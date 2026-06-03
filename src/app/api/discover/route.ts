@@ -77,9 +77,9 @@ export async function GET(request: NextRequest) {
       interests: { select: { interestId: true, level: true } },
       photos: {
         where: { visibility: "public" },
-        take: 1,
+        take: 5,
         orderBy: { order: "asc" },
-        select: { url: true },
+        select: { url: true, verified: true },
       },
     },
   });
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
       city: c.city,
       roleType: c.roleType,
       intent: c.intent,
-      photo: c.photos[0]?.url ?? null,
+      photos: c.photos.map((p) => ({ url: p.url, verified: p.verified })),
       compatibility: c.score > 0 ? Math.round((c.score / maxScore) * 100) : null,
     })),
   });

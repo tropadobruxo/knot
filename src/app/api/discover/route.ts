@@ -5,13 +5,47 @@ import { scoreCandidate } from "@/lib/discovery/scoring";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
-  if (!session?.user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-  }
-
-  const userId = session.user.id;
+  const userId = session?.user?.id ?? null;
   const { searchParams } = request.nextUrl;
   const limit = Math.min(20, Math.max(1, Number(searchParams.get("limit") ?? "10")));
+
+  // Public (unauthenticated) mode — show limited profiles without scoring
+  if (!userId) {
+    const profiles = await prisma.user.findMany({
+      where: { status: "active", ageVerified: true },
+      take: limit,
+      orderBy: { lastActive: "desc" },
+      select: {
+        id: true,
+        username: true,
+        bio: true,
+        city: true,
+        roleType: true,
+        intent: true,
+        photos: {
+          where: { visibility: "public" },
+          take: 5,
+          orderBy: { order: "asc" },
+          select: { url: true, verified: true },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      profiles: profiles.map((c) => ({
+        id: c.id,
+        username: c.username,
+        bio: c.bio,
+        city: c.city,
+        roleType: c.roleType,
+        intent: c.intent,
+        photos: c.photos.map((p) => ({ url: p.url, verified: p.verified })),
+        compatibility: null,
+      })),
+    });
+  }
+
+  // Authenticated mode — full scoring and filtering
 
   // Gather IDs to exclude
   const [likedByMe, matches, blockedByMe, blockedMe] = await Promise.all([

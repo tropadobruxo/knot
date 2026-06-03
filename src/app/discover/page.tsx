@@ -172,15 +172,33 @@ export default function DiscoverPage() {
             </button>
           </>
         ) : (
-          <>
-            <p className="mt-4 text-zinc-500">Sem mais perfis por agora. Volte mais tarde!</p>
+          <div className="mt-10" style={{ animation: "slide-up 0.5s ease-out" }}>
+            <div className="relative mx-auto h-32 w-32">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-pink-200 opacity-50 blur-xl" />
+              <div className="animate-float relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-pink-100">
+                <svg className="h-16 w-16 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.502-4.688-4.502-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.748 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+              </div>
+              <svg className="animate-float-delayed absolute -right-2 -top-1 h-6 w-6 text-pink-300" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              <svg className="animate-float absolute -left-3 top-4 h-4 w-4 text-violet-300" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+            </div>
+            <p className="mt-6 text-lg font-semibold text-zinc-700 dark:text-zinc-200">Sem mais perfis por agora</p>
+            <p className="mt-1 text-sm text-zinc-400">Volte mais tarde para novas conexoes!</p>
             <Link
               href="/matches"
-              className="mt-4 inline-block text-sm text-violet-600 hover:underline"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
             >
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+              </svg>
               Ver seus matches
             </Link>
-          </>
+          </div>
         )}
       </main>
     );

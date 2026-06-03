@@ -63,13 +63,19 @@ export async function getPublicProfile(
   }
   const isOwner = viewerId === user.id;
 
-  // Filter photos by visibility
-  const photos = user.photos.filter((photo) => {
-    if (photo.visibility === "public") return true;
-    if (photo.visibility === "afterMatch") return isOwner || hasMatch;
-    // private: only owner
-    return isOwner;
-  });
+  // Filter photos by visibility — locked afterMatch photos shown as blurred
+  const photos = user.photos
+    .filter((photo) => {
+      if (photo.visibility === "public") return true;
+      if (photo.visibility === "afterMatch") return true; // always show, but blurred if no match
+      return isOwner;
+    })
+    .map((photo) => {
+      const locked = photo.visibility === "afterMatch" && !isOwner && !hasMatch;
+      return { ...photo, locked };
+    });
+
+  const privatePhotoCount = user.photos.filter((p) => p.visibility === "afterMatch").length;
 
   return {
     id: user.id,
@@ -90,7 +96,11 @@ export async function getPublicProfile(
       level: ui.level,
     })),
     limits: user.limits,
-    photos: photos.map(({ visibility: _v, ...rest }) => rest),
+    photos: photos.map(({ visibility, ...rest }) => ({
+      ...rest,
+      private: visibility === "afterMatch",
+    })),
+    privatePhotoCount,
     // Never expose: email, approxLat, approxLng, hashedPassword
   };
 }

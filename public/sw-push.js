@@ -1,4 +1,4 @@
-const CACHE_NAME = "knot-v1";
+const CACHE_NAME = "knot-v2";
 const STATIC_ASSETS = [
   "/",
   "/discover",
@@ -8,6 +8,9 @@ const STATIC_ASSETS = [
   "/search",
   "/premium",
   "/welcome",
+  "/offline",
+  "/icon.svg",
+  "/icon-discreet.svg",
 ];
 
 // Install: pre-cache static pages
@@ -51,9 +54,9 @@ self.addEventListener("fetch", (event) => {
         }).catch(() => {
           // Offline: return cached if available
           if (cached) return cached;
-          // For navigation requests, return cached home
+          // For navigation requests, show offline page
           if (request.mode === "navigate") {
-            return cache.match("/") || new Response("Offline", { status: 503 });
+            return cache.match("/offline") || cache.match("/") || new Response("Offline", { status: 503 });
           }
           return new Response("Offline", { status: 503 });
         });

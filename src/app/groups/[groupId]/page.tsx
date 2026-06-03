@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,6 +38,15 @@ interface PostsResponse {
   pages: number;
 }
 
+interface ChatMsg {
+  id: string;
+  content: string;
+  createdAt: string;
+  sender: { id: string; username: string; image: string | null };
+}
+
+type GroupTab = "posts" | "chat" | "members";
+
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const router = useRouter();
@@ -52,6 +61,12 @@ export default function GroupDetailPage() {
   const [showAllMembers, setShowAllMembers] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   const [now] = useState(() => Date.now());
+  const [activeTab, setActiveTab] = useState<GroupTab>("posts");
+  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetch(`/api/groups/${groupId}`)
@@ -66,6 +81,47 @@ export default function GroupDetailPage() {
       .then(setPostsData)
       .catch(() => {});
   }, [groupId, page]);
+
+  const loadChat = useCallback(() => {
+    fetch(`/api/groups/${groupId}/chat`)
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<{ messages: ChatMsg[] }>;
+      })
+      .then((d) => {
+        setChatMessages(d.messages);
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+      })
+      .catch(() => {});
+  }, [groupId]);
+
+  useEffect(() => {
+    if (activeTab !== "chat") {
+      if (chatPollRef.current) clearInterval(chatPollRef.current);
+      return;
+    }
+    loadChat();
+    chatPollRef.current = setInterval(loadChat, 5000);
+    return () => { if (chatPollRef.current) clearInterval(chatPollRef.current); };
+  }, [activeTab, loadChat]);
+
+  async function handleChatSend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!chatInput.trim() || chatSending) return;
+    setChatSending(true);
+    const res = await fetch(`/api/groups/${groupId}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: chatInput.trim() }),
+    });
+    if (res.ok) {
+      const msg = (await res.json()) as ChatMsg;
+      setChatMessages((prev) => [...prev, msg]);
+      setChatInput("");
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+    }
+    setChatSending(false);
+  }
 
   async function handleJoin() {
     setJoining(true);
@@ -163,7 +219,79 @@ export default function GroupDetailPage() {
         <p className="mt-4 text-zinc-700">{group.description}</p>
       )}
 
+      {/* Tabs */}
+      <div className="mt-6 flex gap-1 border-b border-zinc-200">
+        {(["posts", "chat", "members"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`rounded-t-lg px-4 py-2 text-sm font-medium transition ${
+              activeTab === tab
+                ? "border-b-2 border-violet-600 text-violet-600"
+                : "text-zinc-500 hover:text-zinc-700"
+            }`}
+          >
+            {tab === "posts" ? "Posts" : tab === "chat" ? "Chat" : "Membros"}
+          </button>
+        ))}
+      </div>
+
+      {/* Group Chat */}
+      {activeTab === "chat" && (
+        <div className="mt-4">
+          <div className="flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-700" style={{ height: "400px" }}>
+            <div className="flex-1 overflow-y-auto px-4 py-3">
+              {chatMessages.length === 0 && (
+                <p className="py-10 text-center text-sm text-zinc-400">Nenhuma mensagem ainda. Inicie a conversa!</p>
+              )}
+              {chatMessages.map((msg) => (
+                <div key={msg.id} className="mb-2 flex gap-2">
+                  <Link href={`/profile/${msg.sender.username}`} className="flex-shrink-0">
+                    {msg.sender.image ? (
+                      <Image src={msg.sender.image} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover" unoptimized />
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-600">
+                        {msg.sender.username[0]?.toUpperCase()}
+                      </div>
+                    )}
+                  </Link>
+                  <div>
+                    <div className="flex items-baseline gap-2">
+                      <Link href={`/profile/${msg.sender.username}`} className="text-xs font-semibold hover:text-violet-600">
+                        {msg.sender.username}
+                      </Link>
+                      <span className="text-[10px] text-zinc-400">
+                        {new Date(msg.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <p className="text-sm text-zinc-700 dark:text-zinc-300">{msg.content}</p>
+                  </div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+            <form onSubmit={handleChatSend} className="flex gap-2 border-t border-zinc-200 p-3 dark:border-zinc-700">
+              <input
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Mensagem para o grupo..."
+                maxLength={5000}
+                className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm focus:border-violet-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800"
+              />
+              <button
+                type="submit"
+                disabled={chatSending || !chatInput.trim()}
+                className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-40"
+              >
+                Enviar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Members */}
+      {activeTab === "members" && (
       <div className="mt-6">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-zinc-500">
@@ -246,7 +374,10 @@ export default function GroupDetailPage() {
             })}
         </div>
       </div>
+      )}
 
+      {/* Posts tab */}
+      {activeTab === "posts" && (<>
       {/* New post */}
       <div className="mt-6 flex items-center justify-between">
         <h3 className="text-lg font-semibold">Posts</h3>
@@ -345,6 +476,7 @@ export default function GroupDetailPage() {
           )}
         </div>
       )}
+      </>)}
     </main>
   );
 }

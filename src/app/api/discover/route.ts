@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
         intent: c.intent,
         photos: c.photos.map((p) => ({ url: p.url, verified: p.verified })),
         compatibility: null,
+        premiumTier: "free",
+        interests: [],
       })),
     });
   }
@@ -107,8 +109,9 @@ export async function GET(request: NextRequest) {
       city: true,
       roleType: true,
       intent: true,
+      premiumTier: true,
       lastActive: true,
-      interests: { select: { interestId: true, level: true } },
+      interests: { select: { interestId: true, level: true, interest: { select: { name: true } } } },
       photos: {
         where: { visibility: "public" },
         take: 5,
@@ -142,6 +145,8 @@ export async function GET(request: NextRequest) {
       intent: c.intent,
       photos: c.photos.map((p) => ({ url: p.url, verified: p.verified })),
       compatibility: c.score > 0 ? Math.round((c.score / maxScore) * 100) : null,
+      premiumTier: c.premiumTier,
+      interests: c.interests.map((i) => i.interest.name),
     })),
   });
 }

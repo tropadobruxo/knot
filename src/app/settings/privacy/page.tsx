@@ -26,6 +26,13 @@ export default function PrivacySettingsPage() {
       body: JSON.stringify({ discreetMode }),
     });
 
+    localStorage.setItem("knot-discreet", String(discreetMode));
+    if (discreetMode) {
+      document.title = "Notes";
+    } else {
+      document.title = "Knot";
+    }
+
     setLoading(false);
     setSaved(true);
   }

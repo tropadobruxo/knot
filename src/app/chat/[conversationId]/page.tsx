@@ -15,6 +15,11 @@ export default function ChatPage() {
   const [demoMode, setDemoMode] = useState(false);
   const [otherTyping, setOtherTyping] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -91,6 +96,61 @@ export default function ChatPage() {
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
+  }
+
+  // Audio recording
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        setAudioBlob(blob);
+        setRecording(false);
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+      setRecordingTime(0);
+      recordingTimerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
+    } catch {
+      setError("Nao foi possivel acessar o microfone.");
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop();
+  }
+
+  function cancelAudio() {
+    setAudioBlob(null);
+    setRecordingTime(0);
+  }
+
+  async function sendAudio() {
+    if (!audioBlob) return;
+    setSending(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: dataUrl }),
+      });
+      if (res.ok) {
+        const msg = (await res.json()) as { id: string; content: string; createdAt: string; sender: { username: string } };
+        addOptimistic({ ...msg, senderId: "me" });
+        setAudioBlob(null);
+        setRecordingTime(0);
+      }
+      setSending(false);
+    };
+    reader.readAsDataURL(audioBlob);
   }
 
   // Load conversation metadata
@@ -236,7 +296,14 @@ export default function ChatPage() {
                         : "rounded-2xl rounded-bl-md bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100"
                     }`}
                   >
-                    {msg.content.startsWith("data:image/") || msg.content.startsWith("https://") && /\.(jpg|jpeg|png|gif|webp)/i.test(msg.content) ? (
+                    {msg.content.startsWith("data:audio/") ? (
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 flex-shrink-0 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                        </svg>
+                        <audio src={msg.content} controls className="h-8 max-w-[200px]" preload="metadata" />
+                      </div>
+                    ) : msg.content.startsWith("data:image/") || (msg.content.startsWith("https://") && /\.(jpg|jpeg|png|gif|webp)/i.test(msg.content)) ? (
                       <div className="relative h-48 w-48 overflow-hidden rounded-lg">
                         <Image src={msg.content} alt="Imagem" fill className="object-cover" unoptimized />
                       </div>
@@ -310,6 +377,45 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Audio preview */}
+      {audioBlob && (
+        <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 p-2 dark:border-zinc-700 dark:bg-zinc-800">
+          <svg className="h-5 w-5 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+          </svg>
+          <audio src={URL.createObjectURL(audioBlob)} controls className="h-8 flex-1" preload="metadata" />
+          <span className="text-xs text-zinc-500">{recordingTime}s</span>
+          <button
+            type="button"
+            onClick={sendAudio}
+            disabled={sending}
+            className="rounded-lg bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700 disabled:opacity-40"
+          >
+            Enviar
+          </button>
+          <button type="button" onClick={cancelAudio} className="text-zinc-400 hover:text-zinc-600">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Recording indicator */}
+      {recording && (
+        <div className="mt-2 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-2 dark:border-red-800/30 dark:bg-red-950/30">
+          <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
+          <span className="flex-1 text-xs font-medium text-red-600">Gravando... {recordingTime}s</span>
+          <button
+            type="button"
+            onClick={stopRecording}
+            className="rounded-lg bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700"
+          >
+            Parar
+          </button>
+        </div>
+      )}
+
       {/* Image preview */}
       {imagePreview && (
         <div className="mt-2 flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-2 dark:border-zinc-700 dark:bg-zinc-800">
@@ -345,6 +451,19 @@ export default function ChatPage() {
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={recording ? stopRecording : startRecording}
+          className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border transition ${
+            recording
+              ? "border-red-300 bg-red-50 text-red-500 hover:bg-red-100"
+              : "border-zinc-200 text-zinc-400 hover:bg-zinc-50 hover:text-violet-500 dark:border-zinc-700 dark:hover:bg-zinc-800"
+          }`}
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
           </svg>
         </button>
         <input

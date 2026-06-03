@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 interface MatchItem {
   matchId: string;
@@ -13,8 +14,11 @@ interface MatchItem {
   isOnline: boolean;
 }
 
+const PAGE_SIZE = 20;
+
 export default function MatchesPage() {
-  const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [allMatches, setAllMatches] = useState<MatchItem[]>([]);
+  const [visible, setVisible] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,14 +28,22 @@ export default function MatchesPage() {
         return r.json() as Promise<{ matches: MatchItem[] }>;
       })
       .then((d) => {
-        setMatches(d.matches);
+        setAllMatches(d.matches);
         setLoading(false);
       })
       .catch(() => {
-        setMatches([]);
+        setAllMatches([]);
         setLoading(false);
       });
   }, []);
+
+  const matches = allMatches.slice(0, visible);
+
+  const loadMore = useCallback(() => {
+    setVisible((v) => Math.min(v + PAGE_SIZE, allMatches.length));
+  }, [allMatches.length]);
+
+  const sentinelRef = useInfiniteScroll(loadMore, visible < allMatches.length);
 
   if (loading) {
     return (
@@ -59,7 +71,7 @@ export default function MatchesPage() {
       <h1 className="text-2xl font-bold">Matches</h1>
       <p className="mt-1 text-sm text-zinc-500">Suas conexões</p>
 
-      {matches.length === 0 && (
+      {allMatches.length === 0 && (
         <div className="mt-12 text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
           <div className="relative mx-auto h-28 w-28">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-pink-200 opacity-50 blur-xl" />
@@ -87,7 +99,7 @@ export default function MatchesPage() {
         </div>
       )}
 
-      {matches.length > 0 && (
+      {allMatches.length > 0 && (
         <div className="mt-4 space-y-2">
           {matches.map((m, idx) => (
             <div
@@ -152,6 +164,8 @@ export default function MatchesPage() {
               )}
             </div>
           ))}
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-4" />
         </div>
       )}
     </main>

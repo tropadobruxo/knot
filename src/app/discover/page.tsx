@@ -20,6 +20,8 @@ interface Profile {
   intent: string[];
   photos: ProfilePhoto[];
   compatibility?: number | null;
+  premiumTier?: string;
+  interests?: string[];
 }
 
 const ROLE_OPTIONS = [
@@ -139,10 +141,15 @@ export default function DiscoverPage() {
   const [filterCity, setFilterCity] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [filterIntent, setFilterIntent] = useState("");
+  const [filterInterest, setFilterInterest] = useState("");
+  const [filterVerifiedOnly, setFilterVerifiedOnly] = useState(false);
   const [swipeX, setSwipeX] = useState(0);
   const [swiping, setSwiping] = useState(false);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+
+  const loadingMoreRef = useRef(false);
+  const [exhausted, setExhausted] = useState(false);
 
   useEffect(() => {
     fetch("/api/discover?limit=20")
@@ -151,11 +158,18 @@ export default function DiscoverPage() {
         return r.json() as Promise<{ profiles: Profile[] }>;
       })
       .then((d) => {
-        setProfiles(d.profiles.length > 0 ? d.profiles : PREVIEW_PROFILES);
+        if (d.profiles.length > 0) {
+          setProfiles(d.profiles);
+          setExhausted(d.profiles.length < 20);
+        } else {
+          setProfiles(PREVIEW_PROFILES);
+          setExhausted(true);
+        }
         setLoading(false);
       })
       .catch(() => {
         setProfiles(PREVIEW_PROFILES);
+        setExhausted(true);
         setLoading(false);
       });
   }, []);
@@ -165,9 +179,11 @@ export default function DiscoverPage() {
       if (filterCity && (!p.city || !p.city.toLowerCase().includes(filterCity.toLowerCase()))) return false;
       if (filterRole && p.roleType !== filterRole) return false;
       if (filterIntent && !p.intent.includes(filterIntent)) return false;
+      if (filterInterest && (!p.interests || !p.interests.some((i) => i.toLowerCase().includes(filterInterest.toLowerCase())))) return false;
+      if (filterVerifiedOnly && !p.photos.some((ph) => ph.verified)) return false;
       return true;
     });
-  }, [profiles, filterCity, filterRole, filterIntent]);
+  }, [profiles, filterCity, filterRole, filterIntent, filterInterest, filterVerifiedOnly]);
 
   const cities = useMemo(() => {
     const set = new Set<string>();
@@ -177,7 +193,35 @@ export default function DiscoverPage() {
     return Array.from(set).sort();
   }, [profiles]);
 
-  const activeFilters = [filterCity, filterRole, filterIntent].filter(Boolean).length;
+  // Auto-fetch more profiles when running low
+  useEffect(() => {
+    const remaining = filtered.length - index;
+    if (remaining > 5 || loadingMoreRef.current || exhausted) return;
+
+    loadingMoreRef.current = true;
+    fetch("/api/discover?limit=20")
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<{ profiles: Profile[] }>;
+      })
+      .then((d) => {
+        if (d.profiles.length === 0) {
+          setExhausted(true);
+        } else {
+          const existingIds = new Set(profiles.map((p) => p.id));
+          const newProfiles = d.profiles.filter((p: Profile) => !existingIds.has(p.id));
+          if (newProfiles.length === 0) {
+            setExhausted(true);
+          } else {
+            setProfiles((prev) => [...prev, ...newProfiles]);
+          }
+        }
+        loadingMoreRef.current = false;
+      })
+      .catch(() => { loadingMoreRef.current = false; });
+  }, [index, filtered.length, exhausted, profiles]);
+
+  const activeFilters = [filterCity, filterRole, filterIntent, filterInterest, filterVerifiedOnly].filter(Boolean).length;
 
   const dismissMatch = useCallback(() => setMatchUsername(null), []);
 
@@ -227,6 +271,8 @@ export default function DiscoverPage() {
     setFilterCity("");
     setFilterRole("");
     setFilterIntent("");
+    setFilterInterest("");
+    setFilterVerifiedOnly(false);
     setIndex(0);
   }
 
@@ -431,6 +477,26 @@ export default function DiscoverPage() {
                 ))}
               </select>
             </div>
+            <div>
+              <label htmlFor="filter-interest" className="block text-xs font-medium text-zinc-500">Interesse</label>
+              <input
+                id="filter-interest"
+                placeholder="Ex: shibari, latex..."
+                value={filterInterest}
+                onChange={(e) => { setFilterInterest(e.target.value); setIndex(0); }}
+                className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="filter-verified"
+                checked={filterVerifiedOnly}
+                onChange={(e) => { setFilterVerifiedOnly(e.target.checked); setIndex(0); }}
+                className="h-4 w-4 rounded border-zinc-300 text-violet-600 focus:ring-violet-500"
+              />
+              <label htmlFor="filter-verified" className="text-xs font-medium text-zinc-500">Apenas com foto verificada</label>
+            </div>
           </div>
           {activeFilters > 0 && (
             <button
@@ -567,6 +633,14 @@ export default function DiscoverPage() {
             >
               {current.username}
             </Link>
+            {current.premiumTier === "plus" && (
+              <span className="flex items-center gap-0.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
+                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
+                </svg>
+                Plus
+              </span>
+            )}
             {current.roleType && (
               <span className="rounded bg-violet-100 px-2 py-0.5 text-xs text-violet-800">
                 {current.roleType}

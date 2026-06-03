@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 interface EventSummary {
   id: string;
@@ -43,22 +44,25 @@ const TYPE_ICONS: Record<string, string> = {
   festa: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z",
 };
 
-type ViewMode = "list" | "map";
+type ViewMode = "list" | "map" | "calendar";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [city, setCity] = useState("");
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
+  // Initial fetch + filter changes
   useEffect(() => {
+    let cancelled = false;
     const params = new URLSearchParams();
     if (city) params.set("city", city);
     if (type) params.set("type", type);
-    params.set("page", String(page));
+    params.set("page", "1");
 
     fetch(`/api/events?${params.toString()}`)
       .then((r) => {
@@ -66,16 +70,45 @@ export default function EventsPage() {
         return r.json() as Promise<EventsResponse>;
       })
       .then((data) => {
+        if (cancelled) return;
         setEvents(data.events);
-        setPages(data.pages || 1);
+        setPage(1);
+        setTotalPages(data.pages || 1);
         setLoading(false);
       })
       .catch(() => {
+        if (cancelled) return;
         setEvents([]);
-        setPages(1);
+        setTotalPages(1);
         setLoading(false);
       });
-  }, [city, type, page]);
+    return () => { cancelled = true; };
+  }, [city, type]);
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || page >= totalPages) return;
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    const params = new URLSearchParams();
+    if (city) params.set("city", city);
+    if (type) params.set("type", type);
+    params.set("page", String(nextPage));
+
+    fetch(`/api/events?${params.toString()}`)
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<EventsResponse>;
+      })
+      .then((data) => {
+        setEvents((prev) => [...prev, ...data.events]);
+        setPage(nextPage);
+        setTotalPages(data.pages || 1);
+        setLoadingMore(false);
+      })
+      .catch(() => setLoadingMore(false));
+  }, [loadingMore, page, totalPages, city, type]);
+
+  const sentinelRef = useInfiniteScroll(loadMore, !loadingMore && page < totalPages);
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
@@ -94,20 +127,12 @@ export default function EventsPage() {
           type="text"
           placeholder="Filtrar por cidade..."
           value={city}
-          onChange={(e) => {
-            setCity(e.target.value);
-            setPage(1);
-            setLoading(true);
-          }}
+          onChange={(e) => setCity(e.target.value)}
           className="flex-1 rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         />
         <select
           value={type}
-          onChange={(e) => {
-            setType(e.target.value);
-            setPage(1);
-            setLoading(true);
-          }}
+          onChange={(e) => setType(e.target.value)}
           className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
         >
           <option value="">Todos os tipos</option>
@@ -134,6 +159,16 @@ export default function EventsPage() {
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("calendar")}
+            className={`rounded-md px-2 py-1.5 transition ${viewMode === "calendar" ? "bg-violet-100 text-violet-700" : "text-zinc-400 hover:text-zinc-600"}`}
+            title="Calendario"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
           </button>
         </div>
@@ -227,6 +262,58 @@ export default function EventsPage() {
             </div>
           ));
         })()}
+        {/* Calendar view */}
+        {!loading && viewMode === "calendar" && events.length > 0 && (() => {
+          const byDate = new Map<string, EventSummary[]>();
+          for (const e of events) {
+            const dateKey = new Date(e.datetime).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+            const arr = byDate.get(dateKey) ?? [];
+            arr.push(e);
+            byDate.set(dateKey, arr);
+          }
+          return Array.from(byDate.entries()).map(([dateLabel, dateEvents]) => (
+            <div key={dateLabel} className="animate-card-enter">
+              <div className="sticky top-0 z-10 flex items-center gap-2 bg-white/90 py-2 backdrop-blur dark:bg-zinc-900/90">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-semibold capitalize">{dateLabel}</h3>
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">{dateEvents.length}</span>
+              </div>
+              <div className="ml-4 space-y-2 border-l-2 border-violet-200 pl-4">
+                {dateEvents.map((event) => (
+                  <Link
+                    key={event.id}
+                    href={`/events/${event.id}`}
+                    className="group flex items-center gap-3 rounded-lg p-2 transition hover:bg-violet-50 dark:hover:bg-zinc-800"
+                  >
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-violet-600">
+                        {new Date(event.datetime).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${TYPE_COLORS[event.type] ?? "bg-zinc-100 text-zinc-600"}`}>
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d={TYPE_ICONS[event.type] ?? TYPE_ICONS["munch"]} />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="truncate font-medium group-hover:text-violet-600">{event.title}</h4>
+                      <p className="text-xs text-zinc-500">{event.city} · {event.rsvpCount} confirmados</p>
+                    </div>
+                    {event.priceCents > 0 ? (
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">R$ {(event.priceCents / 100).toFixed(0)}</span>
+                    ) : (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Gratis</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
         {!loading && viewMode === "list" && events.map((event, idx) => (
           <Link
             key={event.id}
@@ -307,26 +394,16 @@ export default function EventsPage() {
         ))}
       </div>
 
-      {pages > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
-          <button
-            onClick={() => { setPage((p) => Math.max(1, p - 1)); setLoading(true); }}
-            disabled={page === 1}
-            className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Anterior
-          </button>
-          <span className="px-3 py-1 text-sm text-zinc-500">
-            {page} / {pages}
-          </span>
-          <button
-            onClick={() => { setPage((p) => Math.min(pages, p + 1)); setLoading(true); }}
-            disabled={page === pages}
-            className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
-          >
-            Próxima
-          </button>
-        </div>
+      {/* Infinite scroll sentinel */}
+      {!loading && events.length > 0 && (
+        <>
+          <div ref={sentinelRef} className="h-4" />
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-600 border-t-transparent" />
+            </div>
+          )}
+        </>
       )}
     </main>
   );

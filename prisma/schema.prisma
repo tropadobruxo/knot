@@ -152,6 +152,7 @@ model User {
   reactions         Reaction[]
   stories           Story[]
   eventComments     EventComment[]
+  groupMessages     GroupMessage[]
 
   @@index([city])
   @@index([status])
@@ -331,10 +332,24 @@ model Group {
   moderated   Boolean  @default(true)
   createdAt   DateTime @default(now())
 
-  members GroupMember[]
-  posts   Post[]
+  members       GroupMember[]
+  posts         Post[]
+  groupMessages GroupMessage[]
 
   @@index([city])
+}
+
+model GroupMessage {
+  id        String   @id @default(cuid())
+  groupId   String
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  group  Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  sender User  @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt])
 }
 
 model GroupMember {

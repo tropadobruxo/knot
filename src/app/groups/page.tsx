@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useInfiniteScroll } from "@/hooks/use-infinite-scroll";
 
 interface GroupItem {
   id: string;
@@ -35,18 +36,24 @@ interface GroupsResponse {
 }
 
 export default function GroupsPage() {
-  const [data, setData] = useState<GroupsResponse | null>(null);
-  const [city, setCity] = useState("");
+  const [groups, setGroups] = useState<GroupItem[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [city, setCity] = useState("");
+  const [fetchKey] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", city: "", moderated: true });
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
+  // Initial fetch and filter changes
   useEffect(() => {
+    let cancelled = false;
     const params = new URLSearchParams();
     if (city) params.set("city", city);
-    params.set("page", String(page));
+    params.set("page", "1");
 
     fetch(`/api/groups?${params}`)
       .then((r) => {
@@ -54,12 +61,44 @@ export default function GroupsPage() {
         return r.json() as Promise<GroupsResponse>;
       })
       .then((d) => {
-        setData(d);
+        if (cancelled) return;
+        setGroups(d.groups);
+        setTotalPages(d.pages);
+        setPage(1);
+        setInitialLoading(false);
       })
       .catch(() => {
-        setData({ groups: [], total: 0, page: 1, pages: 1 });
+        if (cancelled) return;
+        setGroups([]);
+        setTotalPages(1);
+        setInitialLoading(false);
       });
-  }, [city, page]);
+    return () => { cancelled = true; };
+  }, [city, fetchKey]);
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || page >= totalPages) return;
+    const nextPage = page + 1;
+    setLoadingMore(true);
+    const params = new URLSearchParams();
+    if (city) params.set("city", city);
+    params.set("page", String(nextPage));
+
+    fetch(`/api/groups?${params}`)
+      .then((r) => {
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<GroupsResponse>;
+      })
+      .then((d) => {
+        setGroups((prev) => [...prev, ...d.groups]);
+        setPage(nextPage);
+        setTotalPages(d.pages);
+        setLoadingMore(false);
+      })
+      .catch(() => setLoadingMore(false));
+  }, [loadingMore, page, totalPages, city]);
+
+  const sentinelRef = useInfiniteScroll(loadMore, !loadingMore && page < totalPages);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -80,13 +119,15 @@ export default function GroupsPage() {
     if (res.ok) {
       setShowCreate(false);
       setForm({ name: "", description: "", city: "", moderated: true });
-      setPage(1);
-      // Reload
+      // Reload from page 1
       const params = new URLSearchParams();
       if (city) params.set("city", city);
       params.set("page", "1");
       const r = await fetch(`/api/groups?${params}`);
-      setData((await r.json()) as GroupsResponse);
+      const d = (await r.json()) as GroupsResponse;
+      setGroups(d.groups);
+      setTotalPages(d.pages);
+      setPage(1);
     } else {
       const d = (await res.json()) as { error: string };
       setError(d.error);
@@ -162,13 +203,13 @@ export default function GroupsPage() {
         <input
           placeholder="Filtrar por cidade..."
           value={city}
-          onChange={(e) => { setCity(e.target.value); setPage(1); }}
+          onChange={(e) => setCity(e.target.value)}
           className="rounded border border-zinc-300 px-3 py-1.5 text-sm"
         />
       </div>
 
       {/* Loading skeleton */}
-      {!data && (
+      {initialLoading && (
         <div className="mt-4 space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
@@ -190,7 +231,7 @@ export default function GroupsPage() {
       )}
 
       {/* List */}
-      {data && data.groups.length === 0 && (
+      {!initialLoading && groups.length === 0 && (
         <div className="mt-12 text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
           <div className="relative mx-auto h-28 w-28">
             <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-indigo-200 opacity-50 blur-xl" />
@@ -211,9 +252,9 @@ export default function GroupsPage() {
         </div>
       )}
 
-      {data && data.groups.length > 0 && (
+      {!initialLoading && groups.length > 0 && (
         <div className="mt-4 space-y-3">
-          {data.groups.map((group, idx) => (
+          {groups.map((group, idx) => (
             <Link
               key={group.id}
               href={`/groups/${group.id}`}
@@ -280,23 +321,11 @@ export default function GroupsPage() {
             </Link>
           ))}
 
-          {data.pages > 1 && (
-            <div className="flex items-center justify-center gap-2 pt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
-              >
-                Anterior
-              </button>
-              <span className="text-sm text-zinc-500">{page} / {data.pages}</span>
-              <button
-                onClick={() => setPage((p) => Math.min(data.pages, p + 1))}
-                disabled={page >= data.pages}
-                className="rounded border border-zinc-300 px-3 py-1 text-sm disabled:opacity-50"
-              >
-                Próxima
-              </button>
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-4" />
+          {loadingMore && (
+            <div className="flex justify-center py-4">
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-violet-600 border-t-transparent" />
             </div>
           )}
         </div>

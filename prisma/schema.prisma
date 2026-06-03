@@ -79,6 +79,12 @@ enum PostModerationStatus {
   rejected
 }
 
+enum SelfieVerificationStatus {
+  pending
+  approved
+  rejected
+}
+
 // ──────────────────────────────────────────────
 // Core: User
 // ──────────────────────────────────────────────
@@ -95,6 +101,14 @@ model User {
   ageVerified       Boolean   @default(false)
   ageVerifiedAt     DateTime?
   verificationToken String?
+
+  // Selfie verification
+  selfieVerified    Boolean   @default(false)
+  selfieVerifiedAt  DateTime?
+
+  // Travel mode
+  travelCity        String?
+  travelUntil       DateTime?
 
   // Profile
   roleType          RoleType?
@@ -148,11 +162,12 @@ model User {
 
   codeOfConductAcceptedAt DateTime?
 
-  pushSubscriptions PushSubscription[]
-  reactions         Reaction[]
-  stories           Story[]
-  eventComments     EventComment[]
-  groupMessages     GroupMessage[]
+  pushSubscriptions    PushSubscription[]
+  reactions            Reaction[]
+  stories              Story[]
+  eventComments        EventComment[]
+  groupMessages        GroupMessage[]
+  selfieVerifications  SelfieVerification[]
 
   @@index([city])
   @@index([status])
@@ -565,4 +580,24 @@ model Subscription {
   updatedAt            DateTime           @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ──────────────────────────────────────────────
+// Selfie Verification
+// ──────────────────────────────────────────────
+
+model SelfieVerification {
+  id         String                   @id @default(cuid())
+  userId     String
+  selfieUrl  String
+  gesture    String
+  status     SelfieVerificationStatus @default(pending)
+  reviewNote String?
+  createdAt  DateTime                 @default(now())
+  reviewedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }

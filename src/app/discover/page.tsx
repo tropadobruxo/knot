@@ -11,16 +11,27 @@ interface ProfilePhoto {
   verified: boolean;
 }
 
+interface CompatBreakdown {
+  sharedInterests: number;
+  complementaryRole: boolean;
+  sameCity: boolean;
+  sharedIntents: number;
+}
+
 interface Profile {
   id: string;
   username: string;
   bio: string | null;
   city: string | null;
+  displayCity?: string | null;
   roleType: string | null;
   intent: string[];
   photos: ProfilePhoto[];
   compatibility?: number | null;
+  compatibilityBreakdown?: CompatBreakdown | null;
   premiumTier?: string;
+  selfieVerified?: boolean;
+  traveling?: boolean;
   interests?: string[];
 }
 
@@ -641,14 +652,31 @@ export default function DiscoverPage() {
                 Plus
               </span>
             )}
+            {current.selfieVerified && (
+              <span className="flex items-center gap-0.5 rounded-full bg-teal-100 px-1.5 py-0.5 text-[10px] font-medium text-teal-700">
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                </svg>
+                Verificado
+              </span>
+            )}
             {current.roleType && (
               <span className="rounded bg-violet-100 px-2 py-0.5 text-xs text-violet-800">
                 {current.roleType}
               </span>
             )}
           </div>
-          {current.city && (
-            <p className="mt-1 text-sm text-zinc-500">{current.city}</p>
+          {(current.displayCity ?? current.city) && (
+            <p className="mt-1 flex items-center gap-1 text-sm text-zinc-500">
+              {current.traveling && (
+                <svg className="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                </svg>
+              )}
+              {current.displayCity ?? current.city}
+              {current.traveling && <span className="text-xs text-blue-500">(viajando)</span>}
+            </p>
           )}
           {current.bio && (
             <p className="mt-2 text-sm text-zinc-700 line-clamp-3 dark:text-zinc-300">{current.bio}</p>
@@ -663,6 +691,36 @@ export default function DiscoverPage() {
                   {i}
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* Compatibility breakdown */}
+          {current.compatibilityBreakdown && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {current.compatibilityBreakdown.complementaryRole && (
+                <span className="flex items-center gap-1 rounded-full bg-pink-100 px-2 py-0.5 text-[11px] font-medium text-pink-700 dark:bg-pink-900/30 dark:text-pink-300">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 8.586L2.929 1.515 1.515 2.929 8.586 10l-7.071 7.071 1.414 1.414L10 11.414l7.071 7.071 1.414-1.414L11.414 10l7.071-7.071-1.414-1.414L10 8.586z" /></svg>
+                  Roles complementares
+                </span>
+              )}
+              {current.compatibilityBreakdown.sharedInterests > 0 && (
+                <span className="flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>
+                  {current.compatibilityBreakdown.sharedInterests} interesse{current.compatibilityBreakdown.sharedInterests > 1 ? "s" : ""} em comum
+                </span>
+              )}
+              {current.compatibilityBreakdown.sameCity && (
+                <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                  Mesma cidade
+                </span>
+              )}
+              {current.compatibilityBreakdown.sharedIntents > 0 && (
+                <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path d="M1 8.25a1.25 1.25 0 112.5 0v7.5a1.25 1.25 0 11-2.5 0v-7.5zM11 3V1.7c0-.268.14-.526.395-.607A2 2 0 0114 3c0 .995-.182 1.948-.514 2.826-.204.54.166 1.174.744 1.174h2.52c1.243 0 2.261 1.01 2.146 2.247a23.864 23.864 0 01-1.341 5.974 1.999 1.999 0 01-1.894 1.279H6.084a2 2 0 01-1.414-.586L3.586 14.83A2 2 0 013 13.414V9.768a2 2 0 01.586-1.414l5.828-5.828A2 2 0 0110.828 2H11z" /></svg>
+                  Objetivos alinhados
+                </span>
+              )}
             </div>
           )}
         </div>

@@ -26,6 +26,8 @@ export default function ChatPage() {
 
   const { messages, isConnected, addOptimistic, updateReactions } = useChatStream(conversationId);
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+  const [showPanicConfirm, setShowPanicConfirm] = useState(false);
+  const [panicDone, setPanicDone] = useState(false);
   const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
   // Send typing indicator
@@ -33,6 +35,14 @@ export default function ChatPage() {
     if (demoMode) return;
     fetch(`/api/conversations/${conversationId}/typing`, { method: "POST" }).catch(() => {});
   }, [conversationId, demoMode]);
+
+  async function handlePanic() {
+    const res = await fetch(`/api/conversations/${conversationId}/panic`, { method: "POST" });
+    if (res.ok) {
+      setPanicDone(true);
+      setShowPanicConfirm(false);
+    }
+  }
 
   function handleInputChange(value: string) {
     setNewMessage(value);
@@ -247,12 +257,97 @@ export default function ChatPage() {
           {otherUser.username}
         </Link>
         {!demoMode && (
-          <div className="ml-auto flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-400" : "bg-zinc-300"}`} />
-            <span className="text-xs text-zinc-400">{isConnected ? "Online" : "Offline"}</span>
+          <div className="ml-auto flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <span className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-400" : "bg-zinc-300"}`} />
+              <span className="text-xs text-zinc-400">{isConnected ? "Online" : "Offline"}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowPanicConfirm(true)}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-500 transition hover:bg-red-200"
+              title="Safe word — emergencia"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+              </svg>
+            </button>
           </div>
         )}
       </div>
+
+      {/* Safe word confirmation modal */}
+      {showPanicConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-zinc-900">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-zinc-800 dark:text-zinc-100">Safe Word</h3>
+                <p className="text-sm text-zinc-500">Acao de emergencia</p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+              Isso ira imediatamente:
+            </p>
+            <ul className="mt-2 space-y-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 008.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" /></svg>
+                Bloquear esta pessoa
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
+                Enviar denuncia com contexto da conversa
+              </li>
+              <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg>
+                Proteger voce de contato futuro
+              </li>
+            </ul>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => setShowPanicConfirm(false)}
+                className="flex-1 rounded-xl border border-zinc-300 py-2.5 text-sm font-medium text-zinc-600 hover:bg-zinc-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePanic}
+                className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700"
+              >
+                Ativar Safe Word
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Panic done confirmation */}
+      {panicDone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl dark:bg-zinc-900">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="mt-4 text-lg font-bold">Voce esta protegido(a)</h3>
+            <p className="mt-2 text-sm text-zinc-500">
+              A pessoa foi bloqueada e a denuncia enviada com o contexto da conversa. Nossa equipe ira analisar.
+            </p>
+            <Link
+              href="/matches"
+              className="mt-6 inline-block rounded-xl bg-violet-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-violet-700"
+            >
+              Voltar para matches
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="chat-scroll mt-3 flex-1 overflow-y-auto rounded-xl px-2 py-4">

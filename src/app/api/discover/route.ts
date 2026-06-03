@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { scoreCandidate } from "@/lib/discovery/scoring";
+import { scoreCandidateDetailed } from "@/lib/discovery/scoring";
 
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -79,17 +79,25 @@ export async function GET(request: NextRequest) {
   for (const b of blockedByMe) excludeIds.add(b.targetId);
   for (const b of blockedMe) excludeIds.add(b.creatorId);
 
-  // Get viewer's profile for scoring
+  // Get viewer's profile for scoring (use travel city if active)
   const viewer = await prisma.user.findUnique({
     where: { id: userId },
     select: {
       city: true,
+      travelCity: true,
+      travelUntil: true,
       roleType: true,
       intent: true,
       lastActive: true,
       interests: { select: { interestId: true, level: true } },
     },
   });
+
+  // Use travel city if active
+  const travelActive = viewer?.travelCity && viewer?.travelUntil && new Date(viewer.travelUntil) > new Date();
+  if (viewer && travelActive) {
+    viewer.city = viewer.travelCity;
+  }
 
   // Fetch more candidates than needed, then score and sort
   const fetchLimit = Math.min(limit * 3, 60);
@@ -107,9 +115,12 @@ export async function GET(request: NextRequest) {
       username: true,
       bio: true,
       city: true,
+      travelCity: true,
+      travelUntil: true,
       roleType: true,
       intent: true,
       premiumTier: true,
+      selfieVerified: true,
       lastActive: true,
       interests: { select: { interestId: true, level: true, interest: { select: { name: true } } } },
       photos: {
@@ -125,10 +136,10 @@ export async function GET(request: NextRequest) {
   const viewerProfile = viewer ?? { city: null, roleType: null, intent: [], interests: [], lastActive: new Date() };
 
   const scored = candidates
-    .map((c) => ({
-      ...c,
-      score: scoreCandidate(viewerProfile, c),
-    }))
+    .map((c) => {
+      const breakdown = scoreCandidateDetailed(viewerProfile, c);
+      return { ...c, ...breakdown };
+    })
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 
@@ -145,7 +156,16 @@ export async function GET(request: NextRequest) {
       intent: c.intent,
       photos: c.photos.map((p) => ({ url: p.url, verified: p.verified })),
       compatibility: c.score > 0 ? Math.round((c.score / maxScore) * 100) : null,
+      compatibilityBreakdown: c.score > 0 ? {
+        sharedInterests: c.sharedInterests,
+        complementaryRole: c.complementaryRole,
+        sameCity: c.sameCity,
+        sharedIntents: c.sharedIntents,
+      } : null,
       premiumTier: c.premiumTier,
+      selfieVerified: c.selfieVerified,
+      traveling: !!(c.travelCity && c.travelUntil && new Date(c.travelUntil) > new Date()),
+      displayCity: (c.travelCity && c.travelUntil && new Date(c.travelUntil) > new Date()) ? c.travelCity : c.city,
       interests: c.interests.map((i) => i.interest.name),
     })),
   });

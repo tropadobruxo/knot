@@ -73,7 +73,7 @@ async function main() {
       city: "São Paulo",
       roleType: "dom" as const,
       intent: ["relacionamento" as const, "aprender" as const],
-      photos: ["adventurer", "avataaars", "bottts"],
+      photos: ["women/44", "women/45", "women/46"],
     },
     {
       username: "kai_switch",
@@ -82,7 +82,7 @@ async function main() {
       city: "Rio de Janeiro",
       roleType: "switch" as const,
       intent: ["amizade" as const, "casual" as const],
-      photos: ["adventurer", "avataaars", "micah", "bottts"],
+      photos: ["men/32", "men/33", "men/34", "men/35"],
     },
     {
       username: "selene_sub",
@@ -91,7 +91,7 @@ async function main() {
       city: "Belo Horizonte",
       roleType: "sub" as const,
       intent: ["relacionamento" as const],
-      photos: ["adventurer", "micah"],
+      photos: ["women/68", "women/69"],
     },
     {
       username: "thor_dom",
@@ -100,7 +100,7 @@ async function main() {
       city: "São Paulo",
       roleType: "dom" as const,
       intent: ["aprender" as const, "amizade" as const],
-      photos: ["avataaars", "bottts", "adventurer", "micah", "personas"],
+      photos: ["men/75", "men/76", "men/77", "men/78", "men/79"],
     },
     {
       username: "iris_explore",
@@ -109,7 +109,7 @@ async function main() {
       city: "Curitiba",
       roleType: "exploring" as const,
       intent: ["aprender" as const, "amizade" as const],
-      photos: ["micah", "adventurer"],
+      photos: ["women/22", "women/23"],
     },
     {
       username: "fenix_primal",
@@ -118,7 +118,7 @@ async function main() {
       city: "Salvador",
       roleType: "switch" as const,
       intent: ["casual" as const, "amizade" as const],
-      photos: ["adventurer", "avataaars", "bottts"],
+      photos: ["men/11", "men/12", "men/13"],
     },
     {
       username: "maya_rope",
@@ -127,7 +127,7 @@ async function main() {
       city: "Porto Alegre",
       roleType: "dom" as const,
       intent: ["aprender" as const, "relacionamento" as const],
-      photos: ["micah", "adventurer", "avataaars"],
+      photos: ["women/85", "women/86", "women/87"],
     },
     {
       username: "neo_latex",
@@ -136,7 +136,7 @@ async function main() {
       city: "São Paulo",
       roleType: "sub" as const,
       intent: ["casual" as const],
-      photos: ["bottts", "adventurer"],
+      photos: ["men/52", "men/53"],
     },
     {
       username: "akira_zen",
@@ -145,7 +145,7 @@ async function main() {
       city: "Florianópolis",
       roleType: "switch" as const,
       intent: ["relacionamento" as const, "amizade" as const],
-      photos: ["avataaars", "micah", "adventurer"],
+      photos: ["men/41", "men/42", "men/43"],
     },
     {
       username: "rebel_fire",
@@ -154,7 +154,7 @@ async function main() {
       city: "Recife",
       roleType: "exploring" as const,
       intent: ["amizade" as const, "casual" as const],
-      photos: ["adventurer", "personas", "micah", "avataaars"],
+      photos: ["women/90", "women/91", "women/92", "women/93"],
     },
   ];
 
@@ -178,8 +178,8 @@ async function main() {
 
     // Create photos for the profile
     for (let i = 0; i < profile.photos.length; i++) {
-      const style = profile.photos[i];
-      const url = `https://api.dicebear.com/9.x/${style}/svg?seed=${profile.username}_${i}`;
+      const path = profile.photos[i];
+      const url = `https://randomuser.me/api/portraits/${path}.jpg`;
       await prisma.photo.upsert({
         where: { id: `seed-${profile.username}-${i}` },
         update: { url, order: i },

@@ -21,11 +21,12 @@ export async function GET(
       createdAt: true,
       _count: { select: { members: true, posts: true } },
       members: {
-        take: 20,
+        take: 50,
         orderBy: { joinedAt: "asc" },
         select: {
           role: true,
-          user: { select: { username: true } },
+          joinedAt: true,
+          user: { select: { username: true, image: true, lastActive: true } },
         },
       },
     },

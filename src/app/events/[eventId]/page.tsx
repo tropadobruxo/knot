@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { TrustActions } from "@/components/trust-actions";
+
+interface EventComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: { id: string; username: string; image: string | null };
+}
 
 interface EventDetail {
   id: string;
@@ -39,13 +47,40 @@ export default function EventDetailPage() {
   const [rsvpLoading, setRsvpLoading] = useState(false);
   const [rsvpStatus, setRsvpStatus] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [comments, setComments] = useState<EventComment[]>([]);
+  const [commentText, setCommentText] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
 
   useEffect(() => {
     fetch(`/api/events/${eventId}`)
       .then((r) => r.json() as Promise<EventDetail>)
       .then(setEvent)
       .catch(() => {});
+
+    fetch(`/api/events/${eventId}/comments`)
+      .then((r) => r.json() as Promise<{ comments: EventComment[] }>)
+      .then((d) => setComments(d.comments))
+      .catch(() => {});
   }, [eventId]);
+
+  async function handleComment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    setCommentLoading(true);
+
+    const res = await fetch(`/api/events/${eventId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: commentText.trim() }),
+    });
+
+    if (res.ok) {
+      const comment = (await res.json()) as EventComment;
+      setComments((prev) => [...prev, comment]);
+      setCommentText("");
+    }
+    setCommentLoading(false);
+  }
 
   async function handleRsvp() {
     setRsvpLoading(true);
@@ -222,6 +257,80 @@ export default function EventDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Comments */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold">
+          Comentarios
+          {comments.length > 0 && (
+            <span className="ml-2 text-sm font-normal text-zinc-400">({comments.length})</span>
+          )}
+        </h3>
+
+        {/* Comment form */}
+        <form onSubmit={handleComment} className="mt-3 flex gap-2">
+          <input
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            placeholder="Escreva um comentario..."
+            maxLength={2000}
+            className="flex-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm transition focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-100 dark:border-zinc-700 dark:bg-zinc-800"
+          />
+          <button
+            type="submit"
+            disabled={commentLoading || !commentText.trim()}
+            className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-40"
+          >
+            {commentLoading ? "..." : "Enviar"}
+          </button>
+        </form>
+
+        {/* Comment list */}
+        {comments.length === 0 && (
+          <p className="mt-4 text-sm text-zinc-400">Nenhum comentario ainda. Seja o primeiro!</p>
+        )}
+
+        {comments.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {comments.map((c) => (
+              <div key={c.id} className="flex gap-3">
+                <Link href={`/profile/${c.author.username}`} className="flex-shrink-0">
+                  {c.author.image ? (
+                    <Image
+                      src={c.author.image}
+                      alt={c.author.username}
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full object-cover"
+                      unoptimized={c.author.image.includes("dicebear") || c.author.image.includes("randomuser")}
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 text-xs font-bold text-violet-700">
+                      {c.author.username[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </Link>
+                <div className="flex-1 rounded-xl bg-zinc-50 px-3 py-2 dark:bg-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <Link href={`/profile/${c.author.username}`} className="text-sm font-medium hover:text-violet-600">
+                      {c.author.username}
+                    </Link>
+                    <span className="text-xs text-zinc-400">
+                      {new Date(c.createdAt).toLocaleDateString("pt-BR", {
+                        day: "numeric",
+                        month: "short",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-zinc-700 dark:text-zinc-300">{c.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Report event */}
       <div className="mt-6 border-t border-zinc-200 pt-4">

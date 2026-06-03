@@ -149,6 +149,9 @@ model User {
   codeOfConductAcceptedAt DateTime?
 
   pushSubscriptions PushSubscription[]
+  reactions         Reaction[]
+  stories           Story[]
+  eventComments     EventComment[]
 
   @@index([city])
   @@index([status])
@@ -297,8 +300,23 @@ model Message {
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  reactions    Reaction[]
 
   @@index([conversationId, createdAt])
+}
+
+model Reaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
 }
 
 // ──────────────────────────────────────────────
@@ -383,8 +401,9 @@ model Event {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  organizer User   @relation("EventOrganizer", fields: [organizerId], references: [id])
-  rsvps     Rsvp[]
+  organizer     User           @relation("EventOrganizer", fields: [organizerId], references: [id])
+  rsvps         Rsvp[]
+  eventComments EventComment[]
 
   @@index([city, datetime])
 }
@@ -477,6 +496,41 @@ model PushSubscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ──────────────────────────────────────────────
+// Stories (ephemeral 24h content)
+// ──────────────────────────────────────────────
+
+model Story {
+  id        String   @id @default(cuid())
+  authorId  String
+  content   String
+  imageUrl  String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([expiresAt])
+}
+
+// ──────────────────────────────────────────────
+// Event Comments
+// ──────────────────────────────────────────────
+
+model EventComment {
+  id        String   @id @default(cuid())
+  eventId   String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  event  Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, createdAt])
 }
 
 // ──────────────────────────────────────────────

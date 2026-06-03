@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
         moderated: true,
         createdAt: true,
         _count: { select: { members: true, posts: true } },
+        posts: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: { createdAt: true },
+        },
       },
     }),
     prisma.group.count({ where }),
@@ -33,10 +38,15 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({
     groups: groups.map((g) => ({
-      ...g,
+      id: g.id,
+      name: g.name,
+      description: g.description,
+      city: g.city,
+      moderated: g.moderated,
+      createdAt: g.createdAt,
       memberCount: g._count.members,
       postCount: g._count.posts,
-      _count: undefined,
+      lastPostAt: g.posts[0]?.createdAt ?? null,
     })),
     total,
     page,

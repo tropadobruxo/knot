@@ -72,12 +72,29 @@ export async function GET(
               createdAt: true,
               senderId: true,
               sender: { select: { username: true } },
+              reactions: { select: { emoji: true, userId: true } },
             },
           });
 
           if (messages.length > 0) {
             lastSeen = messages[messages.length - 1]!.createdAt;
-            sendEvent(JSON.stringify({ type: "messages", messages }));
+            const formatted = messages.map((m) => {
+              const grouped = new Map<string, string[]>();
+              for (const r of m.reactions) {
+                const arr = grouped.get(r.emoji) ?? [];
+                arr.push(r.userId);
+                grouped.set(r.emoji, arr);
+              }
+              return {
+                ...m,
+                reactions: Array.from(grouped.entries()).map(([emoji, userIds]) => ({
+                  emoji,
+                  count: userIds.length,
+                  userIds,
+                })),
+              };
+            });
+            sendEvent(JSON.stringify({ type: "messages", messages: formatted }));
           }
         } catch {
           // DB error — close gracefully

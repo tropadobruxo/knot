@@ -43,6 +43,8 @@ const TYPE_ICONS: Record<string, string> = {
   festa: "M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z",
 };
 
+type ViewMode = "list" | "map";
+
 export default function EventsPage() {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [city, setCity] = useState("");
@@ -50,6 +52,7 @@ export default function EventsPage() {
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -112,6 +115,28 @@ export default function EventsPage() {
           <option value="workshop">Workshop</option>
           <option value="festa">Festa</option>
         </select>
+        <div className="flex rounded-lg border border-zinc-300 p-0.5">
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`rounded-md px-2 py-1.5 transition ${viewMode === "list" ? "bg-violet-100 text-violet-700" : "text-zinc-400 hover:text-zinc-600"}`}
+            title="Lista"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("map")}
+            className={`rounded-md px-2 py-1.5 transition ${viewMode === "map" ? "bg-violet-100 text-violet-700" : "text-zinc-400 hover:text-zinc-600"}`}
+            title="Mapa por cidade"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="mt-6 space-y-4">
@@ -148,7 +173,61 @@ export default function EventsPage() {
             <p className="mt-1 text-sm text-zinc-400">Tente mudar os filtros ou volte mais tarde</p>
           </div>
         )}
-        {!loading && events.map((event, idx) => (
+        {/* Map view: events grouped by city */}
+        {!loading && viewMode === "map" && events.length > 0 && (() => {
+          const byCity = new Map<string, EventSummary[]>();
+          for (const e of events) {
+            const c = e.city || "Sem cidade";
+            const arr = byCity.get(c) ?? [];
+            arr.push(e);
+            byCity.set(c, arr);
+          }
+          return Array.from(byCity.entries()).map(([cityName, cityEvents]) => (
+            <div key={cityName} className="animate-card-enter">
+              <div className="mb-2 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold">{cityName}</h3>
+                <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">{cityEvents.length}</span>
+              </div>
+              <div className="ml-4 space-y-2 border-l-2 border-violet-200 pl-4">
+                {cityEvents.map((event) => (
+                  <Link
+                    key={event.id}
+                    href={`/events/${event.id}`}
+                    className="group flex items-center gap-3 rounded-lg p-2 transition hover:bg-violet-50 dark:hover:bg-zinc-800"
+                  >
+                    <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${TYPE_COLORS[event.type] ?? "bg-zinc-100 text-zinc-600"}`}>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d={TYPE_ICONS[event.type] ?? TYPE_ICONS["munch"]} />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="truncate font-medium group-hover:text-violet-600">{event.title}</h4>
+                      <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <span>{TYPE_LABELS[event.type] ?? event.type}</span>
+                        <span>·</span>
+                        <span>{new Date(event.datetime).toLocaleDateString("pt-BR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
+                        <span>·</span>
+                        <span>{event.rsvpCount} confirmados</span>
+                      </div>
+                    </div>
+                    {event.priceCents > 0 ? (
+                      <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700">R$ {(event.priceCents / 100).toFixed(0)}</span>
+                    ) : (
+                      <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">Gratis</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
+        {!loading && viewMode === "list" && events.map((event, idx) => (
           <Link
             key={event.id}
             href={`/events/${event.id}`}

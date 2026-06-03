@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useChatStream } from "@/lib/messaging/use-chat-stream";
+import { useChatStream, type ReactionGroup } from "@/lib/messaging/use-chat-stream";
 
 export default function ChatPage() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -19,7 +19,9 @@ export default function ChatPage() {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { messages, isConnected, addOptimistic } = useChatStream(conversationId);
+  const { messages, isConnected, addOptimistic, updateReactions } = useChatStream(conversationId);
+  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+  const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
   // Send typing indicator
   const sendTypingSignal = useCallback(() => {
@@ -30,6 +32,27 @@ export default function ChatPage() {
   function handleInputChange(value: string) {
     setNewMessage(value);
     sendTypingSignal();
+  }
+
+  // Toggle emoji reaction on a message
+  async function toggleReaction(messageId: string, emoji: string) {
+    setActiveReactionMenu(null);
+    if (demoMode) return;
+    try {
+      const res = await fetch(
+        `/api/conversations/${conversationId}/messages/${messageId}/reactions`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ emoji }) },
+      );
+      if (res.ok) {
+        // Refresh reactions for this message from the full conversation
+        const convRes = await fetch(`/api/conversations/${conversationId}`);
+        if (convRes.ok) {
+          const data = (await convRes.json()) as { messages: { id: string; reactions: ReactionGroup[] }[] };
+          const updated = data.messages.find((m) => m.id === messageId);
+          if (updated) updateReactions(messageId, updated.reactions);
+        }
+      }
+    } catch { /* ignore */ }
   }
 
   // Poll typing status from other user
@@ -204,26 +227,69 @@ export default function ChatPage() {
                   })}
                 </p>
               )}
-              <div className={`mb-1 flex ${isMe ? "justify-end" : "justify-start"}`}>
-                <div
-                  className={`max-w-[75%] px-4 py-2.5 ${
-                    isMe
-                      ? "rounded-2xl rounded-br-md bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-sm"
-                      : "rounded-2xl rounded-bl-md bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100"
-                  }`}
-                >
-                  {msg.content.startsWith("data:image/") || msg.content.startsWith("https://") && /\.(jpg|jpeg|png|gif|webp)/i.test(msg.content) ? (
-                    <div className="relative h-48 w-48 overflow-hidden rounded-lg">
-                      <Image src={msg.content} alt="Imagem" fill className="object-cover" unoptimized />
+              <div className={`group/msg mb-1 flex ${isMe ? "justify-end" : "justify-start"}`}>
+                <div className="relative max-w-[75%]">
+                  <div
+                    className={`px-4 py-2.5 ${
+                      isMe
+                        ? "rounded-2xl rounded-br-md bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-sm"
+                        : "rounded-2xl rounded-bl-md bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100"
+                    }`}
+                  >
+                    {msg.content.startsWith("data:image/") || msg.content.startsWith("https://") && /\.(jpg|jpeg|png|gif|webp)/i.test(msg.content) ? (
+                      <div className="relative h-48 w-48 overflow-hidden rounded-lg">
+                        <Image src={msg.content} alt="Imagem" fill className="object-cover" unoptimized />
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    )}
+                    {isMe && (
+                      <div className="mt-0.5 flex justify-end">
+                        <svg className={`h-3.5 w-3.5 ${idx === displayMessages.length - 1 ? "text-blue-300" : "text-white/50"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  {/* Reaction button */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveReactionMenu(activeReactionMenu === msg.id ? null : msg.id)}
+                    className={`absolute ${isMe ? "-left-7" : "-right-7"} top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full bg-white text-zinc-400 opacity-0 shadow-sm transition hover:text-violet-500 group-hover/msg:opacity-100 dark:bg-zinc-800`}
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z" />
+                    </svg>
+                  </button>
+                  {/* Emoji picker popup */}
+                  {activeReactionMenu === msg.id && (
+                    <div className={`absolute ${isMe ? "right-0" : "left-0"} -top-10 z-10 flex gap-1 rounded-full bg-white px-2 py-1 shadow-lg dark:bg-zinc-800`}>
+                      {REACTION_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => toggleReaction(msg.id, emoji)}
+                          className="rounded-full px-1 text-lg transition hover:scale-125 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   )}
-                  {isMe && (
-                    <div className="mt-0.5 flex justify-end">
-                      <svg className={`h-3.5 w-3.5 ${idx === displayMessages.length - 1 ? "text-blue-300" : "text-white/50"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
+                  {/* Display existing reactions */}
+                  {msg.reactions && msg.reactions.length > 0 && (
+                    <div className={`mt-0.5 flex flex-wrap gap-1 ${isMe ? "justify-end" : "justify-start"}`}>
+                      {msg.reactions.map((r) => (
+                        <button
+                          key={r.emoji}
+                          type="button"
+                          onClick={() => toggleReaction(msg.id, r.emoji)}
+                          className="flex items-center gap-0.5 rounded-full border border-zinc-200 bg-white px-1.5 py-0.5 text-xs shadow-sm transition hover:border-violet-300 dark:border-zinc-700 dark:bg-zinc-800"
+                        >
+                          <span>{r.emoji}</span>
+                          <span className="text-zinc-500">{r.count}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>

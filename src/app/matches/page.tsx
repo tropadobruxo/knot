@@ -9,6 +9,8 @@ interface MatchItem {
   conversationId: string | null;
   createdAt: string;
   user: { id: string; username: string; image: string | null };
+  lastMessage: { content: string; createdAt: string; isMe: boolean } | null;
+  isOnline: boolean;
 }
 
 export default function MatchesPage() {
@@ -93,34 +95,51 @@ export default function MatchesPage() {
               className={`flex items-center justify-between rounded-xl border border-zinc-200 p-3 transition hover:border-violet-200 hover:shadow-sm dark:border-zinc-700 animate-card-enter${idx > 0 && idx <= 4 ? `-${idx}` : ""}`}
             >
               <div className="flex items-center gap-3">
-                {m.user.image ? (
-                  <Image
-                    src={m.user.image}
-                    alt={m.user.username}
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-full object-cover"
-                    unoptimized={m.user.image.includes("dicebear")}
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100 text-sm font-medium text-violet-800">
-                    {m.user.username[0]?.toUpperCase()}
+                <div className="relative flex-shrink-0">
+                  {m.user.image ? (
+                    <Image
+                      src={m.user.image}
+                      alt={m.user.username}
+                      width={44}
+                      height={44}
+                      className="h-11 w-11 rounded-full object-cover"
+                      unoptimized={m.user.image.includes("dicebear")}
+                    />
+                  ) : (
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-violet-100 text-sm font-medium text-violet-800">
+                      {m.user.username[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  {m.isOnline && (
+                    <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-green-400 dark:border-zinc-800" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/profile/${m.user.username}`}
+                      className="truncate font-medium hover:text-violet-600"
+                    >
+                      {m.user.username}
+                    </Link>
+                    {m.isOnline && (
+                      <span className="flex-shrink-0 text-[10px] font-medium text-green-500">online</span>
+                    )}
                   </div>
-                )}
-                <div>
-                  <Link
-                    href={`/profile/${m.user.username}`}
-                    className="font-medium hover:text-violet-600"
-                  >
-                    {m.user.username}
-                  </Link>
-                  <p className="text-xs text-zinc-400">
-                    Match em{" "}
-                    {new Date(m.createdAt).toLocaleDateString("pt-BR", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </p>
+                  {m.lastMessage ? (
+                    <p className="truncate text-xs text-zinc-400">
+                      {m.lastMessage.isMe && <span className="text-zinc-500">Voce: </span>}
+                      {m.lastMessage.content.startsWith("data:image/") ? "Enviou uma foto" : m.lastMessage.content}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-zinc-400">
+                      Match em{" "}
+                      {new Date(m.createdAt).toLocaleDateString("pt-BR", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </p>
+                  )}
                 </div>
               </div>
               {m.conversationId && (

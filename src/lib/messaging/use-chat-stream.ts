@@ -2,12 +2,19 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
-interface ChatMessage {
+export interface ReactionGroup {
+  emoji: string;
+  count: number;
+  userIds: string[];
+}
+
+export interface ChatMessage {
   id: string;
   content: string;
   createdAt: string;
   senderId: string;
   sender: { username: string };
+  reactions?: ReactionGroup[];
 }
 
 interface SSEEvent {
@@ -117,5 +124,11 @@ export function useChatStream(conversationId: string) {
     setMessages((prev) => [...prev, msg]);
   }, []);
 
-  return { messages, isConnected, addOptimistic };
+  const updateReactions = useCallback((messageId: string, reactions: ReactionGroup[]) => {
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, reactions } : m)),
+    );
+  }, []);
+
+  return { messages, isConnected, addOptimistic, updateReactions };
 }

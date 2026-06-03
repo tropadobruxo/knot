@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+
+interface MemberItem {
+  role: string;
+  joinedAt: string;
+  user: { username: string; image: string | null; lastActive: string | null };
+}
 
 interface GroupDetail {
   id: string;
@@ -12,7 +19,7 @@ interface GroupDetail {
   moderated: boolean;
   memberCount: number;
   postCount: number;
-  members: { role: string; user: { username: string } }[];
+  members: MemberItem[];
 }
 
 interface PostItem {
@@ -42,6 +49,9 @@ export default function GroupDetailPage() {
   const [postForm, setPostForm] = useState({ title: "", content: "" });
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
+  const [showAllMembers, setShowAllMembers] = useState(false);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     fetch(`/api/groups/${groupId}`)
@@ -155,20 +165,85 @@ export default function GroupDetailPage() {
 
       {/* Members */}
       <div className="mt-6">
-        <h3 className="text-sm font-medium text-zinc-500">Membros</h3>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {group.members.map((m) => (
-            <Link
-              key={m.user.username}
-              href={`/profile/${m.user.username}`}
-              className="rounded-full bg-zinc-100 px-3 py-1 text-sm hover:bg-zinc-200"
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-zinc-500">
+            Membros ({group.memberCount})
+          </h3>
+          {group.members.length > 6 && (
+            <button
+              onClick={() => setShowAllMembers(!showAllMembers)}
+              className="text-xs font-medium text-violet-600 hover:underline"
             >
-              {m.user.username}
-              {m.role !== "member" && (
-                <span className="ml-1 text-xs text-violet-600">({m.role})</span>
-              )}
-            </Link>
-          ))}
+              {showAllMembers ? "Mostrar menos" : "Ver todos"}
+            </button>
+          )}
+        </div>
+
+        {showAllMembers && group.members.length > 6 && (
+          <input
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            placeholder="Buscar membro..."
+            className="mt-2 w-full rounded-lg border border-zinc-200 px-3 py-1.5 text-sm focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100 dark:border-zinc-700 dark:bg-zinc-800"
+          />
+        )}
+
+        <div className="mt-3 space-y-2">
+          {(showAllMembers ? group.members : group.members.slice(0, 6))
+            .filter((m) => !memberSearch || m.user.username.toLowerCase().includes(memberSearch.toLowerCase()))
+            .map((m) => {
+              const isOnline = m.user.lastActive
+                ? now - new Date(m.user.lastActive).getTime() < 5 * 60 * 1000
+                : false;
+              return (
+                <Link
+                  key={m.user.username}
+                  href={`/profile/${m.user.username}`}
+                  className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                >
+                  <div className="relative flex-shrink-0">
+                    {m.user.image ? (
+                      <Image
+                        src={m.user.image}
+                        alt={m.user.username}
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 rounded-full object-cover"
+                        unoptimized={m.user.image.includes("dicebear") || m.user.image.includes("randomuser")}
+                      />
+                    ) : (
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-sm font-medium text-violet-700">
+                        {m.user.username[0]?.toUpperCase()}
+                      </div>
+                    )}
+                    {isOnline && (
+                      <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-green-400 dark:border-zinc-900" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm font-medium">{m.user.username}</span>
+                      {m.role === "admin" && (
+                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700">Admin</span>
+                      )}
+                      {m.role === "moderator" && (
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Mod</span>
+                      )}
+                      {isOnline && (
+                        <span className="text-[10px] font-medium text-green-500">online</span>
+                      )}
+                    </div>
+                    <span className="text-xs text-zinc-400">
+                      Entrou em{" "}
+                      {new Date(m.joinedAt).toLocaleDateString("pt-BR", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
         </div>
       </div>
 

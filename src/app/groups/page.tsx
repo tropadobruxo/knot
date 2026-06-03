@@ -11,6 +11,20 @@ interface GroupItem {
   moderated: boolean;
   memberCount: number;
   postCount: number;
+  lastPostAt: string | null;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "agora";
+  if (mins < 60) return `${mins}min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d`;
+  const months = Math.floor(days / 30);
+  return `${months}m`;
 }
 
 interface GroupsResponse {
@@ -252,6 +266,14 @@ export default function GroupsPage() {
                       </svg>
                       {group.postCount} posts
                     </span>
+                    {group.lastPostAt && (
+                      <span className="flex items-center gap-1 text-emerald-600">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Ativo {timeAgo(group.lastPostAt)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

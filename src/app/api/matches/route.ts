@@ -18,19 +18,40 @@ export async function GET() {
     select: {
       id: true,
       createdAt: true,
-      userA: { select: { id: true, username: true, image: true } },
-      userB: { select: { id: true, username: true, image: true } },
-      conversation: { select: { id: true } },
+      userA: { select: { id: true, username: true, image: true, lastActive: true } },
+      userB: { select: { id: true, username: true, image: true, lastActive: true } },
+      conversation: {
+        select: {
+          id: true,
+          messages: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { content: true, createdAt: true, senderId: true },
+          },
+        },
+      },
     },
   });
 
+  const now = Date.now();
+  const ONLINE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+
   const result = matches.map((m) => {
     const other = m.userA.id === userId ? m.userB : m.userA;
+    const lastMsg = m.conversation?.messages[0] ?? null;
+    const isOnline = other.lastActive ? now - new Date(other.lastActive).getTime() < ONLINE_THRESHOLD : false;
+
     return {
       matchId: m.id,
       conversationId: m.conversation?.id ?? null,
       createdAt: m.createdAt,
-      user: other,
+      user: { id: other.id, username: other.username, image: other.image },
+      lastMessage: lastMsg ? {
+        content: lastMsg.content.length > 60 ? lastMsg.content.slice(0, 60) + "..." : lastMsg.content,
+        createdAt: lastMsg.createdAt,
+        isMe: lastMsg.senderId === userId,
+      } : null,
+      isOnline,
     };
   });
 

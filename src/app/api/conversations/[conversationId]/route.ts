@@ -61,15 +61,33 @@ export async function GET(
         createdAt: true,
         senderId: true,
         sender: { select: { username: true } },
+        reactions: { select: { emoji: true, userId: true } },
       },
     }),
     prisma.message.count({ where: { conversationId } }),
   ]);
 
+  const formatted = messages.reverse().map((m) => {
+    const grouped = new Map<string, string[]>();
+    for (const r of m.reactions) {
+      const arr = grouped.get(r.emoji) ?? [];
+      arr.push(r.userId);
+      grouped.set(r.emoji, arr);
+    }
+    return {
+      ...m,
+      reactions: Array.from(grouped.entries()).map(([emoji, userIds]) => ({
+        emoji,
+        count: userIds.length,
+        userIds,
+      })),
+    };
+  });
+
   return NextResponse.json({
     conversationId,
     otherUser: other,
-    messages: messages.reverse(),
+    messages: formatted,
     total,
     page,
     pages: Math.ceil(total / pageSize),

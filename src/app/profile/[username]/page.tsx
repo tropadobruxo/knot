@@ -7,6 +7,7 @@ import { TrustActions } from "@/components/trust-actions";
 import { PhotoLightbox } from "@/components/photo-lightbox";
 import { ShareProfile } from "@/components/share-profile";
 import { CompatibilityCard } from "@/components/compatibility-card";
+import { EndorsementSection } from "@/components/endorsement-section";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -208,6 +209,17 @@ export default async function ProfilePage({ params }: Props) {
             ))}
           </div>
         </div>
+      )}
+
+      {profile.endorsements && profile.endorsements.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Reputacao</h3>
+          <EndorsementSection endorsements={profile.endorsements} targetId={profile.id} isOwner={isOwner} />
+        </div>
+      )}
+
+      {!isOwner && session?.user && profile.endorsements !== undefined && (
+        <EndorsementSection endorsements={profile.endorsements ?? []} targetId={profile.id} isOwner={false} showGiveButton />
       )}
 
       {profile.limits.length > 0 && (

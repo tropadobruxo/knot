@@ -49,6 +49,14 @@ export async function getPublicProfile(
 
   if (!user) return null;
 
+  // Endorsement counts
+  const endorsementCounts = await prisma.endorsement.groupBy({
+    by: ["tag"],
+    where: { receiverId: user.id },
+    _count: { tag: true },
+    orderBy: { _count: { tag: "desc" } },
+  });
+
   // Check if viewer has a match with this user
   let hasMatch = false;
   if (viewerId && viewerId !== user.id) {
@@ -103,6 +111,7 @@ export async function getPublicProfile(
       private: visibility === "afterMatch",
     })),
     privatePhotoCount,
+    endorsements: endorsementCounts.map((e) => ({ tag: e.tag, count: e._count.tag })),
     // Never expose: email, approxLat, approxLng, hashedPassword
   };
 }

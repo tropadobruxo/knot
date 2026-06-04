@@ -7,6 +7,7 @@ import Link from "next/link";
 export default function PrivacySettingsPage() {
   const router = useRouter();
   const [discreetMode, setDiscreetMode] = useState(false);
+  const [secretProfile, setSecretProfile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -18,8 +19,11 @@ export default function PrivacySettingsPage() {
 
   useEffect(() => {
     fetch("/api/settings/privacy")
-      .then((r) => r.json() as Promise<{ discreetMode: boolean }>)
-      .then((data) => setDiscreetMode(data.discreetMode))
+      .then((r) => r.json() as Promise<{ discreetMode: boolean; secretProfile: boolean }>)
+      .then((data) => {
+        setDiscreetMode(data.discreetMode);
+        setSecretProfile(data.secretProfile);
+      })
       .catch(() => {});
 
     fetch("/api/settings/travel")
@@ -39,7 +43,7 @@ export default function PrivacySettingsPage() {
     await fetch("/api/settings/privacy", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ discreetMode }),
+      body: JSON.stringify({ discreetMode, secretProfile }),
     });
 
     localStorage.setItem("knot-discreet", String(discreetMode));
@@ -77,6 +81,30 @@ export default function PrivacySettingsPage() {
               <span
                 className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
                   discreetMode ? "left-5.5" : "left-0.5"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-zinc-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Perfil secreto</p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Seu perfil so aparece no discover para quem voce ja curtiu.
+                Pessoas que voce nao curtiu nao te encontram.
+              </p>
+            </div>
+            <button
+              onClick={() => setSecretProfile(!secretProfile)}
+              className={`relative h-6 w-11 rounded-full transition-colors ${
+                secretProfile ? "bg-violet-600" : "bg-zinc-300"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  secretProfile ? "left-5.5" : "left-0.5"
                 }`}
               />
             </button>

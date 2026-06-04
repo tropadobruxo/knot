@@ -99,6 +99,9 @@ export async function GET(request: NextRequest) {
     viewer.city = viewer.travelCity;
   }
 
+  // IDs of users the viewer has liked (for secret profile visibility)
+  const likedByMeIds = new Set(likedByMe.map((l) => l.toUserId));
+
   // Fetch more candidates than needed, then score and sort
   const fetchLimit = Math.min(limit * 3, 60);
 
@@ -121,6 +124,8 @@ export async function GET(request: NextRequest) {
       intent: true,
       premiumTier: true,
       selfieVerified: true,
+      secretProfile: true,
+      boostedUntil: true,
       lastActive: true,
       interests: { select: { interestId: true, level: true, interest: { select: { name: true } } } },
       photos: {
@@ -135,12 +140,21 @@ export async function GET(request: NextRequest) {
   // Score and sort by compatibility
   const viewerProfile = viewer ?? { city: null, roleType: null, intent: [], interests: [], lastActive: new Date() };
 
-  const scored = candidates
+  // Filter out secret profile users unless the viewer has liked them
+  const visible = candidates.filter((c) => !c.secretProfile || likedByMeIds.has(c.id));
+
+  const scored = visible
     .map((c) => {
       const breakdown = scoreCandidateDetailed(viewerProfile, c);
       return { ...c, ...breakdown };
     })
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      // Boosted users appear first
+      const aBoosted = a.boostedUntil && new Date(a.boostedUntil) > new Date() ? 1 : 0;
+      const bBoosted = b.boostedUntil && new Date(b.boostedUntil) > new Date() ? 1 : 0;
+      if (bBoosted !== aBoosted) return bBoosted - aBoosted;
+      return b.score - a.score;
+    })
     .slice(0, limit);
 
   // Compute max score for percentage normalization

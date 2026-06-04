@@ -28,6 +28,7 @@ export default function ChatPage() {
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [showPanicConfirm, setShowPanicConfirm] = useState(false);
   const [panicDone, setPanicDone] = useState(false);
+  const [icebreakers, setIcebreakers] = useState<string[]>([]);
   const REACTION_EMOJIS = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
   // Send typing indicator
@@ -175,6 +176,12 @@ export default function ChatPage() {
         setDemoMode(true);
         setOtherUser({ id: "demo-2", username: "kai_switch" });
       });
+
+    // Load icebreaker suggestions
+    fetch(`/api/conversations/${conversationId}/icebreakers`)
+      .then((r) => r.json() as Promise<{ suggestions: string[] }>)
+      .then((data) => setIcebreakers(data.suggestions ?? []))
+      .catch(() => {});
   }, [conversationId]);
 
   // Auto-scroll on new messages
@@ -352,14 +359,30 @@ export default function ChatPage() {
       {/* Messages */}
       <div className="chat-scroll mt-3 flex-1 overflow-y-auto rounded-xl px-2 py-4">
         {displayMessages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center gap-2">
+          <div className="flex h-full flex-col items-center justify-center gap-3">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-100">
               <svg className="h-8 w-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
               </svg>
             </div>
             <p className="text-sm text-zinc-500">Nenhuma mensagem ainda.</p>
-            <p className="text-xs text-zinc-400">Diga olá!</p>
+            {icebreakers.length > 0 ? (
+              <div className="mt-2 w-full max-w-xs space-y-2">
+                <p className="text-center text-xs font-medium text-violet-500">Quebre o gelo:</p>
+                {icebreakers.map((text, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setNewMessage(text)}
+                    className="w-full rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-left text-xs text-violet-700 transition hover:bg-violet-100 dark:border-violet-800/30 dark:bg-violet-950/20 dark:text-violet-300"
+                  >
+                    {text}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-zinc-400">Diga ola!</p>
+            )}
           </div>
         )}
 

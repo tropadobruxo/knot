@@ -172,6 +172,11 @@ model User {
   eventComments        EventComment[]
   groupMessages        GroupMessage[]
   selfieVerifications  SelfieVerification[]
+  endorsementsGiven    Endorsement[] @relation("EndorsementGiver")
+  endorsementsReceived Endorsement[] @relation("EndorsementReceiver")
+
+  // Secret profile mode
+  secretProfile        Boolean  @default(false)
 
   @@index([city])
   @@index([status])
@@ -606,4 +611,22 @@ model SelfieVerification {
 
   @@index([userId])
   @@index([status])
+}
+
+// ──────────────────────────────────────────────
+// Endorsements
+// ──────────────────────────────────────────────
+
+model Endorsement {
+  id         String   @id @default(cuid())
+  giverId    String
+  receiverId String
+  tag        String   // "respectful", "communicative", "punctual", "safe", "fun"
+  createdAt  DateTime @default(now())
+
+  giver    User @relation("EndorsementGiver", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver User @relation("EndorsementReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([giverId, receiverId, tag])
+  @@index([receiverId])
 }

@@ -4,6 +4,8 @@ import { z } from "zod";
 
 export const createLikeSchema = z.object({
   targetId: z.string().min(1, "targetId obrigatório"),
+  superLike: z.boolean().optional(),
+  note: z.string().max(200).optional(),
 });
 
 export const sendMessageSchema = z.object({

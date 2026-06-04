@@ -22,12 +22,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  const { targetId } = parsed.data;
+  const { targetId, superLike, note } = parsed.data;
   const userId = session.user.id;
 
   const error = validateLike(userId, targetId);
   if (error) {
     return NextResponse.json({ error }, { status: 400 });
+  }
+
+  // Super like: 1/day free, unlimited for Plus
+  if (superLike) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { premiumTier: true, lastSuperLikeAt: true },
+    });
+    const isPremiumUser = user?.premiumTier !== "free";
+    if (!isPremiumUser && user?.lastSuperLikeAt) {
+      const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      if (user.lastSuperLikeAt > dayAgo) {
+        return NextResponse.json(
+          { error: "Voce ja usou seu super like hoje. Assine Plus para ilimitados!", upgrade: true },
+          { status: 429 },
+        );
+      }
+    }
+    await prisma.user.update({
+      where: { id: userId },
+      data: { lastSuperLikeAt: new Date() },
+    });
   }
 
   // Check target exists and is active
@@ -55,8 +77,8 @@ export async function POST(request: Request) {
   // Upsert like
   await prisma.like.upsert({
     where: { fromUserId_toUserId: { fromUserId: userId, toUserId: targetId } },
-    create: { fromUserId: userId, toUserId: targetId },
-    update: {},
+    create: { fromUserId: userId, toUserId: targetId, superLike: !!superLike, note: superLike ? (note?.slice(0, 200) ?? null) : null },
+    update: { superLike: !!superLike, note: superLike ? (note?.slice(0, 200) ?? null) : null },
   });
 
   // Check for mutual like → create match

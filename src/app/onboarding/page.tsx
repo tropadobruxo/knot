@@ -6,12 +6,20 @@ import { useRouter } from "next/navigation";
 type RoleType = "dom" | "sub" | "switch" | "exploring";
 type IntentType = "relacionamento" | "amizade" | "aprender" | "casual";
 
+interface KinkQuestion {
+  id: string;
+  question: string;
+  interestName: string;
+  category: string;
+}
+
 interface OnboardingData {
   photoPlaceholder: boolean;
   bio: string;
   city: string;
   roleType: RoleType | null;
   intents: IntentType[];
+  kinkAnswers: Record<string, "yes" | "curious" | "no">;
 }
 
 const ROLES: { value: RoleType; label: string; emoji: string; desc: string }[] = [
@@ -28,6 +36,17 @@ const INTENTS: { value: IntentType; label: string; color: string }[] = [
   { value: "casual", label: "Casual", color: "from-amber-500 to-orange-500" },
 ];
 
+const KINK_QUIZ: KinkQuestion[] = [
+  { id: "q1", question: "Voce curte amarracao ou shibari?", interestName: "Shibari", category: "bondage" },
+  { id: "q2", question: "Se interessa por dinamicas D/s (dominacao e submissao)?", interestName: "D/s", category: "power-exchange" },
+  { id: "q3", question: "Tem curiosidade por impacto (spanking, etc)?", interestName: "Impact Play", category: "impact" },
+  { id: "q4", question: "Gosta de roleplay ou jogos de papeis?", interestName: "Roleplay", category: "roleplay" },
+  { id: "q5", question: "Tem interesse em fetiches sensoriais (cera, gelo, vendas)?", interestName: "Sensory Play", category: "sensory" },
+  { id: "q6", question: "Se interessa por latex, couro ou fetiche por materiais?", interestName: "Latex/Leather", category: "material" },
+  { id: "q7", question: "Tem curiosidade por pet play?", interestName: "Pet Play", category: "roleplay" },
+  { id: "q8", question: "Se interessa por exibicionismo/voyeurismo em contexto consensual?", interestName: "Exhibitionism", category: "exposure" },
+];
+
 const STEP_ICONS: { path: string; gradient: string }[] = [
   {
     path: "M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z",
@@ -42,6 +61,10 @@ const STEP_ICONS: { path: string; gradient: string }[] = [
     gradient: "from-amber-500 to-orange-500",
   },
   {
+    path: "M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z",
+    gradient: "from-rose-500 to-fuchsia-500",
+  },
+  {
     path: "M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z",
     gradient: "from-emerald-500 to-teal-500",
   },
@@ -51,11 +74,12 @@ const STEP_TITLES = [
   "Bem-vindo ao Knot",
   "Sobre voce",
   "Seu papel",
+  "Seus kinks",
   "Pronto!",
 ];
 
 const BIO_MAX_LENGTH = 500;
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 async function patchProfile(data: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -89,6 +113,7 @@ export default function OnboardingPage() {
     city: "",
     roleType: null,
     intents: [],
+    kinkAnswers: {},
   });
 
   const updateData = useCallback(<K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) => {
@@ -116,9 +141,20 @@ export default function OnboardingPage() {
       payload = { bio: data.bio, city: data.city };
     } else if (currentStep === 2) {
       payload = { roleType: data.roleType, intent: data.intents };
+    } else if (currentStep === 3) {
+      // Save kink quiz answers as interests
+      const interests = KINK_QUIZ
+        .filter((q) => data.kinkAnswers[q.id] === "yes" || data.kinkAnswers[q.id] === "curious")
+        .map((q) => ({
+          name: q.interestName,
+          level: data.kinkAnswers[q.id] === "yes" ? "experienced" : "curious",
+        }));
+      if (interests.length > 0) {
+        payload = { interests };
+      }
     }
 
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       const result = await patchProfile(payload);
       setSaving(false);
 
@@ -150,6 +186,7 @@ export default function OnboardingPage() {
     if (currentStep === 0) return true;
     if (currentStep === 1) return data.bio.trim().length > 0 && data.city.trim().length > 0;
     if (currentStep === 2) return data.roleType !== null && data.intents.length > 0;
+    if (currentStep === 3) return true; // kink quiz is optional
     return true;
   };
 
@@ -420,8 +457,62 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {/* Step 4: Summary */}
+          {/* Step 4: Kink Quiz */}
           {currentStep === 3 && (
+            <div>
+              <h1 className="text-center text-2xl font-bold text-zinc-900 dark:text-white">
+                Seus kinks
+              </h1>
+              <p className="mt-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                Responda rapido — isso ajuda a encontrar pessoas compativeis. Pode pular!
+              </p>
+
+              <div className="mt-6 space-y-3">
+                {KINK_QUIZ.map((q) => {
+                  const answer = data.kinkAnswers[q.id];
+                  return (
+                    <div
+                      key={q.id}
+                      className="rounded-xl border border-zinc-200 p-3 dark:border-zinc-700"
+                    >
+                      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">
+                        {q.question}
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        {([
+                          { value: "yes" as const, label: "Sim!", color: "bg-green-500" },
+                          { value: "curious" as const, label: "Curioso(a)", color: "bg-amber-500" },
+                          { value: "no" as const, label: "Nao", color: "bg-zinc-400" },
+                        ] as const).map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setData((prev) => ({
+                              ...prev,
+                              kinkAnswers: { ...prev.kinkAnswers, [q.id]: opt.value },
+                            }))}
+                            className={`flex-1 rounded-lg py-2 text-xs font-medium transition active:scale-95 ${
+                              answer === opt.value
+                                ? `${opt.color} text-white shadow-md`
+                                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-center text-xs text-zinc-400">
+                {Object.values(data.kinkAnswers).filter((v) => v === "yes" || v === "curious").length} interesses selecionados
+              </p>
+            </div>
+          )}
+
+          {/* Step 5: Summary */}
+          {currentStep === 4 && (
             <div className="text-center">
               <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Pronto!</h1>
               <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -541,7 +632,7 @@ export default function OnboardingPage() {
 
         {/* Navigation buttons */}
         <div className="mt-8 flex gap-3">
-          {currentStep > 0 && currentStep < 3 && (
+          {currentStep > 0 && currentStep < 4 && (
             <button
               type="button"
               onClick={goBack}
@@ -551,18 +642,18 @@ export default function OnboardingPage() {
             </button>
           )}
 
-          {currentStep < 3 && (
+          {currentStep < 4 && (
             <button
               type="button"
               onClick={saveAndAdvance}
               disabled={!canAdvance() || saving}
               className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 py-3.5 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
             >
-              {saving ? "Salvando..." : "Continuar"}
+              {saving ? "Salvando..." : currentStep === 3 ? "Continuar" : "Continuar"}
             </button>
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <div className="flex w-full flex-col gap-3">
               <button
                 type="button"

@@ -110,6 +110,10 @@ model User {
   travelCity        String?
   travelUntil       DateTime?
 
+  // Boost
+  boostedUntil      DateTime?
+  lastSuperLikeAt   DateTime?
+
   // Profile
   roleType          RoleType?
   intent            IntentType[]
@@ -272,6 +276,8 @@ model Like {
   id         String   @id @default(cuid())
   fromUserId String
   toUserId   String
+  superLike  Boolean  @default(false)
+  note       String?
   createdAt  DateTime @default(now())
 
   fromUser User @relation("LikesGiven", fields: [fromUserId], references: [id], onDelete: Cascade)

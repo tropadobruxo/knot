@@ -14,15 +14,7 @@ export async function GET() {
     select: { premiumTier: true },
   });
 
-  if (!user || !isPremium(user.premiumTier)) {
-    return NextResponse.json(
-      {
-        error: "Recurso exclusivo do plano Plus.",
-        upgrade: true,
-      },
-      { status: 403 },
-    );
-  }
+  const premium = user ? isPremium(user.premiumTier) : false;
 
   const likes = await prisma.like.findMany({
     where: { toUserId: session.user.id },
@@ -30,6 +22,8 @@ export async function GET() {
     take: 50,
     select: {
       createdAt: true,
+      superLike: true,
+      note: true,
       fromUser: {
         select: {
           id: true,
@@ -48,13 +42,27 @@ export async function GET() {
   });
 
   return NextResponse.json({
+    premium,
+    count: likes.length,
     likes: likes.map((l) => ({
       createdAt: l.createdAt,
-      user: {
-        ...l.fromUser,
-        photo: l.fromUser.photos[0]?.url ?? null,
-        photos: undefined,
-      },
+      superLike: l.superLike,
+      note: premium ? l.note : null,
+      user: premium
+        ? {
+            id: l.fromUser.id,
+            username: l.fromUser.username,
+            city: l.fromUser.city,
+            roleType: l.fromUser.roleType,
+            photo: l.fromUser.photos[0]?.url ?? null,
+          }
+        : {
+            id: l.fromUser.id,
+            username: null,
+            city: null,
+            roleType: null,
+            photo: l.fromUser.photos[0]?.url ?? null,
+          },
     })),
   });
 }

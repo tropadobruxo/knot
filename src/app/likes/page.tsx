@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { ListSkeleton } from "@/components/skeleton";
 
 interface ReceivedLike {
   createdAt: string;
@@ -39,10 +40,8 @@ export default function LikesReceivedPage() {
     return (
       <main className="mx-auto max-w-lg px-6 py-10">
         <div className="skeleton h-8 w-48" />
-        <div className="mt-6 space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="skeleton h-20 w-full rounded-xl" />
-          ))}
+        <div className="mt-6">
+          <ListSkeleton rows={4} />
         </div>
       </main>
     );

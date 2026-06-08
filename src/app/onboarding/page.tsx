@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 type RoleType = "dom" | "sub" | "switch" | "exploring";
 type IntentType = "relacionamento" | "amizade" | "aprender" | "casual";
@@ -190,23 +191,32 @@ export default function OnboardingPage() {
     return true;
   };
 
-  const animationClass =
-    direction === "forward"
-      ? "animate-[slideInRight_0.35s_ease-out]"
-      : "animate-[slideInLeft_0.35s_ease-out]";
-
   const stepIcon = STEP_ICONS[currentStep] ?? STEP_ICONS[0]!;
+
+  const slideVariants = {
+    enter: (dir: string) => ({ x: dir === "forward" ? 60 : -60, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: string) => ({ x: dir === "forward" ? -60 : 60, opacity: 0 }),
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center bg-white px-6 py-8 dark:bg-zinc-950">
       {/* Decorative background orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/4 h-80 w-80 rounded-full bg-violet-200 opacity-30 blur-3xl dark:bg-violet-900 dark:opacity-20" />
-        <div className="absolute -bottom-32 right-1/4 h-80 w-80 rounded-full bg-pink-200 opacity-30 blur-3xl dark:bg-pink-900 dark:opacity-20" />
+        <motion.div
+          animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -top-32 left-1/4 h-80 w-80 rounded-full bg-violet-200 opacity-30 blur-3xl dark:bg-violet-900 dark:opacity-20"
+        />
+        <motion.div
+          animate={{ x: [0, -20, 0], y: [0, 15, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -bottom-32 right-1/4 h-80 w-80 rounded-full bg-pink-200 opacity-30 blur-3xl dark:bg-pink-900 dark:opacity-20"
+        />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Progress bar */}
+        {/* Progress bar with segments */}
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
             Passo {currentStep + 1} de {TOTAL_STEPS}
@@ -215,16 +225,31 @@ export default function OnboardingPage() {
             {STEP_TITLES[currentStep]}
           </span>
         </div>
-        <div className="mb-8 h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-violet-600 to-pink-500 transition-all duration-500 ease-out"
-            style={{ width: `${((currentStep + 1) / TOTAL_STEPS) * 100}%` }}
-          />
+        <div className="mb-8 flex gap-1.5">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"
+            >
+              <motion.div
+                initial={false}
+                animate={{
+                  width: i < currentStep ? "100%" : i === currentStep ? "100%" : "0%",
+                }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="h-full rounded-full bg-gradient-to-r from-violet-600 to-pink-500"
+              />
+            </motion.div>
+          ))}
         </div>
 
-        {/* Step icon */}
+        {/* Step icon with animation */}
         <div className="mb-6 flex justify-center">
-          <div
+          <motion.div
+            key={currentStep}
+            initial={{ scale: 0.5, rotate: -10, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${stepIcon.gradient} shadow-lg`}
           >
             <svg
@@ -236,11 +261,20 @@ export default function OnboardingPage() {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d={stepIcon.path} />
             </svg>
-          </div>
+          </motion.div>
         </div>
 
-        {/* Step content with animation */}
-        <div key={currentStep} className={animationClass}>
+        {/* Step content with Framer Motion */}
+        <AnimatePresence mode="wait" custom={direction}>
+        <motion.div
+          key={currentStep}
+          custom={direction}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.3, ease: "easeOut" }}
+        >
           {/* Step 1: Photo */}
           {currentStep === 0 && (
             <div className="text-center">
@@ -621,7 +655,8 @@ export default function OnboardingPage() {
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
+        </AnimatePresence>
 
         {/* Error */}
         {error && (
@@ -662,41 +697,20 @@ export default function OnboardingPage() {
               >
                 Voltar e editar
               </button>
-              <button
+              <motion.button
                 type="button"
                 onClick={handleFinish}
-                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 py-4 text-lg font-bold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 py-4 text-lg font-bold text-white shadow-lg transition hover:shadow-xl"
               >
                 Comecar a explorar
-              </button>
+              </motion.button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Keyframe animations */}
-      <style jsx>{`
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </main>
   );
 }

@@ -1,10 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { AnimatePresence } from "framer-motion";
 import { ProfileCompleteness } from "@/components/profile-completeness";
 import { MatchCelebration } from "@/components/match-celebration";
+import { SwipeCard } from "@/components/swipe-card";
+import { CardSkeleton } from "@/components/skeleton";
+import { fireMatchConfetti, fireLikeConfetti, fireSuperLikeConfetti } from "@/lib/hooks/use-confetti";
 
 interface ProfilePhoto {
   url: string;
@@ -159,10 +163,6 @@ export default function DiscoverPage() {
   const [superLikeError, setSuperLikeError] = useState("");
   const [boostActive, setBoostActive] = useState(false);
   const [boostLoading, setBoostLoading] = useState(false);
-  const [swipeX, setSwipeX] = useState(0);
-  const [swiping, setSwiping] = useState(false);
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
 
   const loadingMoreRef = useRef(false);
   const [exhausted, setExhausted] = useState(false);
@@ -256,6 +256,12 @@ export default function DiscoverPage() {
     if (!profile) return;
     haptic(isSuper ? 25 : 15);
 
+    if (isSuper) {
+      fireSuperLikeConfetti();
+    } else {
+      fireLikeConfetti();
+    }
+
     try {
       const res = await fetch("/api/like", {
         method: "POST",
@@ -267,6 +273,7 @@ export default function DiscoverPage() {
         const data = (await res.json()) as { matched: boolean; conversationId: string | null };
         if (data.matched) {
           haptic(30);
+          fireMatchConfetti();
           setMatchUsername(profile.username);
         }
       } else if (isSuper && res.status === 429) {
@@ -277,6 +284,7 @@ export default function DiscoverPage() {
     } catch {
       if (Math.random() > 0.5) {
         haptic(30);
+        fireMatchConfetti();
         setMatchUsername(profile.username);
       }
     }
@@ -303,86 +311,12 @@ export default function DiscoverPage() {
     setIndex(0);
   }
 
-  const SWIPE_THRESHOLD = 80;
-
-  function onTouchStart(e: React.TouchEvent) {
-    const touch = e.touches[0];
-    if (!touch) return;
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() };
-    setSwiping(true);
-  }
-
-  function onTouchMove(e: React.TouchEvent) {
-    if (!touchStartRef.current) return;
-    const touch = e.touches[0];
-    if (!touch) return;
-    const dx = touch.clientX - touchStartRef.current.x;
-    const dy = Math.abs(touch.clientY - touchStartRef.current.y);
-    // Only swipe horizontally if not scrolling vertically
-    if (dy > Math.abs(dx) && Math.abs(dx) < 20) return;
-    setSwipeX(dx);
-  }
-
-  function onTouchEnd() {
-    if (!touchStartRef.current) return;
-    if (swipeX > SWIPE_THRESHOLD) {
-      handleLike();
-    } else if (swipeX < -SWIPE_THRESHOLD) {
-      handlePass();
-    }
-    setSwipeX(0);
-    setSwiping(false);
-    touchStartRef.current = null;
-  }
-
-  // Mouse drag support for desktop
-  function onMouseDown(e: React.MouseEvent) {
-    touchStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
-    setSwiping(true);
-
-    function onMouseMove(ev: MouseEvent) {
-      if (!touchStartRef.current) return;
-      setSwipeX(ev.clientX - touchStartRef.current.x);
-    }
-
-    function onMouseUp() {
-      if (touchStartRef.current) {
-        const finalX = swipeX;
-        if (finalX > SWIPE_THRESHOLD) {
-          handleLike();
-        } else if (finalX < -SWIPE_THRESHOLD) {
-          handlePass();
-        }
-      }
-      setSwipeX(0);
-      setSwiping(false);
-      touchStartRef.current = null;
-      window.removeEventListener("mousemove", onMouseMove);
-      window.removeEventListener("mouseup", onMouseUp);
-    }
-
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
-  }
-
-  const swipeRotation = swipeX * 0.1;
-  const swipeOpacity = Math.max(0, 1 - Math.abs(swipeX) / 300);
-
   if (loading) {
     return (
       <main className="mx-auto max-w-md px-6 py-10">
         <div className="skeleton h-8 w-32" />
-        <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700">
-          <div className="skeleton aspect-square w-full" style={{ borderRadius: 0 }} />
-          <div className="space-y-3 p-4">
-            <div className="skeleton h-6 w-40" />
-            <div className="skeleton h-4 w-24" />
-            <div className="skeleton h-4 w-full" />
-            <div className="flex gap-3 pt-2">
-              <div className="skeleton h-12 flex-1" />
-              <div className="skeleton h-12 flex-1" />
-            </div>
-          </div>
+        <div className="mt-6">
+          <CardSkeleton />
         </div>
       </main>
     );
@@ -578,30 +512,14 @@ export default function DiscoverPage() {
         />
       )}
 
-      <div
-        ref={cardRef}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-        className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700 animate-card-enter select-none cursor-grab active:cursor-grabbing"
-        style={{
-          transform: `translateX(${swipeX}px) rotate(${swipeRotation}deg)`,
-          opacity: swipeOpacity,
-          transition: swiping ? "none" : "transform 0.3s ease, opacity 0.3s ease",
-        }}
+      <AnimatePresence mode="wait">
+      <SwipeCard
+        cardKey={current.id}
+        onSwipeRight={() => handleLike()}
+        onSwipeLeft={handlePass}
       >
-        {/* Swipe indicators */}
-        {swipeX > 30 && (
-          <div className="absolute left-4 top-4 z-30 rounded-lg border-2 border-green-400 bg-green-400/20 px-3 py-1 text-lg font-bold text-green-400 backdrop-blur" style={{ transform: `rotate(-15deg)` }}>
-            CURTIR
-          </div>
-        )}
-        {swipeX < -30 && (
-          <div className="absolute right-4 top-4 z-30 rounded-lg border-2 border-red-400 bg-red-400/20 px-3 py-1 text-lg font-bold text-red-400 backdrop-blur" style={{ transform: `rotate(15deg)` }}>
-            PASSAR
-          </div>
-        )}
+      <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700 select-none">
+
         {/* Photo Gallery */}
         <div className="relative aspect-[3/4] bg-zinc-200 dark:bg-zinc-800">
           {current.photos.length > 0 ? (
@@ -700,7 +618,7 @@ export default function DiscoverPage() {
               </span>
             )}
             {current.selfieVerified && (
-              <span className="flex items-center gap-0.5 rounded-full bg-teal-100 px-1.5 py-0.5 text-[10px] font-medium text-teal-700">
+              <span className="animate-badge-pulse flex items-center gap-0.5 rounded-full bg-teal-100 px-1.5 py-0.5 text-[10px] font-medium text-teal-700">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
@@ -794,7 +712,7 @@ export default function DiscoverPage() {
           </button>
           <button
             onClick={() => handleLike()}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 py-3 text-sm font-medium text-white shadow-md transition hover:shadow-lg active:scale-95"
+            className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 py-3 text-sm font-medium text-white shadow-md transition hover:shadow-lg active:scale-95"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
@@ -802,6 +720,10 @@ export default function DiscoverPage() {
             Curtir
           </button>
         </div>
+
+      </div>
+      </SwipeCard>
+      </AnimatePresence>
 
         {/* Super Like modal */}
         {showSuperLike && (
@@ -845,7 +767,6 @@ export default function DiscoverPage() {
             </div>
           </div>
         )}
-      </div>
 
       <p className="mt-3 text-center text-xs text-zinc-400">
         {index + 1} / {filtered.length}

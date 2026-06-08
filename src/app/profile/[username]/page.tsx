@@ -76,7 +76,7 @@ export default async function ProfilePage({ params }: Props) {
     <main className="mx-auto max-w-2xl px-6 py-10">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-pink-500 text-2xl font-bold text-white">
+        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-violet-600 text-2xl font-bold text-white shadow-sm">
           {profile.username[0]?.toUpperCase()}
         </div>
         <div className="flex-1">
@@ -118,7 +118,7 @@ export default async function ProfilePage({ params }: Props) {
               </span>
             )}
             {profile.roleType && (
-              <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-800">
+              <span className="rounded-full border border-zinc-200 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:border-zinc-700 dark:text-zinc-400">
                 {profile.roleType}
               </span>
             )}
@@ -138,7 +138,7 @@ export default async function ProfilePage({ params }: Props) {
           {isOwner && (
             <Link
               href="/profile/edit"
-              className="flex items-center gap-1.5 rounded-xl border border-zinc-300 px-4 py-2 text-sm font-medium transition hover:border-violet-300 hover:bg-violet-50"
+              className="flex items-center gap-1.5 rounded-xl border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -150,7 +150,7 @@ export default async function ProfilePage({ params }: Props) {
       </div>
 
       {profile.bio && (
-        <p className="mt-5 text-zinc-600 leading-relaxed">{profile.bio}</p>
+        <p className="mt-5 text-zinc-600 leading-relaxed dark:text-zinc-300">{profile.bio}</p>
       )}
 
       {profile.intent.length > 0 && (
@@ -160,7 +160,7 @@ export default async function ProfilePage({ params }: Props) {
             {profile.intent.map((i) => (
               <span
                 key={i}
-                className="rounded-full bg-zinc-100 px-3 py-1 text-sm"
+                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm text-zinc-600 dark:border-zinc-700/70 dark:bg-zinc-800/60 dark:text-zinc-400"
               >
                 {i}
               </span>
@@ -174,7 +174,7 @@ export default async function ProfilePage({ params }: Props) {
           <div className="flex items-center gap-2">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Fotos</h3>
             {profile.privatePhotoCount > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-medium text-violet-700">
+              <span className="flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
                 <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
@@ -197,11 +197,11 @@ export default async function ProfilePage({ params }: Props) {
             {profile.interests.map((interest) => (
               <span
                 key={interest.id}
-                className="rounded-full bg-violet-100 px-3 py-1 text-sm text-violet-800"
+                className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-sm text-zinc-600 dark:border-zinc-700/70 dark:bg-zinc-800/60 dark:text-zinc-400"
               >
                 {interest.name}
                 {interest.level && (
-                  <span className="ml-1 text-xs text-violet-500">
+                  <span className="ml-1 text-xs text-zinc-400 dark:text-zinc-500">
                     ({interest.level})
                   </span>
                 )}

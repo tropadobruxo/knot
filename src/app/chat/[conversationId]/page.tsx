@@ -410,7 +410,7 @@ export default function ChatPage() {
                   <div
                     className={`px-4 py-2.5 ${
                       isMe
-                        ? "rounded-2xl rounded-br-md bg-gradient-to-r from-violet-600 to-violet-500 text-white shadow-sm"
+                        ? "rounded-2xl rounded-br-md bg-violet-600 text-white shadow-sm"
                         : "rounded-2xl rounded-bl-md bg-zinc-100 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100"
                     }`}
                   >
@@ -594,7 +594,7 @@ export default function ChatPage() {
         <button
           type="submit"
           disabled={sending || (!newMessage.trim() && !imagePreview)}
-          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 text-white shadow-md transition hover:shadow-lg active:scale-95 disabled:opacity-40"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97] disabled:opacity-40"
         >
           {sending ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />

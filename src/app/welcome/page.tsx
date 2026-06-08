@@ -66,9 +66,9 @@ export default function WelcomePage() {
         {/* Hero */}
         <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6">
           {/* Background gradient orbs */}
-          <div className="animate-float-slow absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-200 opacity-40 blur-3xl" />
-          <div className="animate-float-delayed absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-pink-200 opacity-40 blur-3xl" />
-          <div className="animate-float absolute -left-10 top-1/3 h-40 w-40 rounded-full bg-fuchsia-200 opacity-20 blur-3xl" />
+          <div className="animate-float-slow absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-zinc-200 opacity-40 blur-3xl dark:bg-zinc-700" />
+          <div className="animate-float-delayed absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-zinc-200 opacity-40 blur-3xl dark:bg-zinc-700" />
+          <div className="animate-float absolute -left-10 top-1/3 h-40 w-40 rounded-full bg-zinc-200 opacity-20 blur-3xl dark:bg-zinc-700" />
 
           {/* Decorative floating SVG illustrations */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -95,7 +95,7 @@ export default function WelcomePage() {
           </div>
 
           <div className="relative z-10 text-center" style={{ animation: "slide-up 0.6s ease-out" }}>
-            <h1 className="bg-gradient-to-r from-violet-600 via-purple-500 to-pink-500 bg-clip-text text-6xl font-extrabold tracking-tight text-transparent">
+            <h1 className="bg-gradient-to-r from-violet-600 to-pink-500 bg-clip-text text-6xl font-extrabold tracking-tight text-transparent">
               Knot
             </h1>
             <p className="mt-4 text-xl text-zinc-600">
@@ -123,13 +123,13 @@ export default function WelcomePage() {
           <div className="relative z-10 mt-10 w-full max-w-sm space-y-3" style={{ animation: "slide-up 1s ease-out" }}>
             <button
               onClick={() => setMode("register")}
-              className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-3.5 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98]"
+              className="w-full rounded-xl bg-violet-600 px-4 py-3.5 font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97]"
             >
               Criar conta
             </button>
             <button
               onClick={() => setMode("login")}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3.5 font-semibold transition hover:bg-zinc-50 active:scale-[0.98]"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3.5 font-semibold transition hover:bg-zinc-50 active:scale-[0.97] dark:border-zinc-700 dark:bg-zinc-900/60 dark:hover:bg-zinc-800/60"
             >
               Entrar
             </button>
@@ -154,12 +154,12 @@ export default function WelcomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6">
       {/* Background gradient orbs */}
-      <div className="pointer-events-none fixed -top-24 left-1/4 h-72 w-72 rounded-full bg-violet-200 opacity-30 blur-3xl" />
-      <div className="pointer-events-none fixed -bottom-24 right-1/4 h-72 w-72 rounded-full bg-pink-200 opacity-30 blur-3xl" />
+      <div className="pointer-events-none fixed -top-24 left-1/4 h-72 w-72 rounded-full bg-zinc-200 opacity-40 blur-3xl dark:bg-zinc-700" />
+      <div className="pointer-events-none fixed -bottom-24 right-1/4 h-72 w-72 rounded-full bg-zinc-200 opacity-40 blur-3xl dark:bg-zinc-700" />
 
       <form
         onSubmit={mode === "register" ? handleRegister : handleLogin}
-        className="relative z-10 w-full max-w-sm space-y-5 rounded-2xl border border-zinc-200 bg-white/80 p-8 shadow-xl backdrop-blur"
+        className="relative z-10 w-full max-w-sm space-y-5 rounded-2xl border border-zinc-200/80 bg-white/80 p-8 shadow-sm backdrop-blur dark:border-zinc-800/80 dark:bg-zinc-900/60"
         style={{ animation: "slide-up 0.4s ease-out" }}
       >
         <div className="text-center">
@@ -239,7 +239,7 @@ export default function WelcomePage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-3 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+          className="w-full rounded-xl bg-violet-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97] disabled:opacity-50"
         >
           {loading
             ? "Aguarde..."

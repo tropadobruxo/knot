@@ -210,7 +210,7 @@ export default function StoriesPage() {
         <h1 className="text-2xl font-bold">Moments</h1>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 px-4 py-2 text-sm font-medium text-white shadow-md hover:shadow-lg active:scale-95"
+          className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97]"
         >
           {showCreate ? "Cancelar" : "Novo moment"}
         </button>
@@ -250,7 +250,7 @@ export default function StoriesPage() {
               onClick={() => openStory(idx)}
               className="flex flex-col items-center gap-1.5"
             >
-              <div className="rounded-full bg-gradient-to-br from-violet-500 to-pink-500 p-0.5">
+              <div className="rounded-full bg-violet-600 p-0.5">
                 {group.user.image ? (
                   <Image
                     src={group.user.image}
@@ -278,9 +278,9 @@ export default function StoriesPage() {
       {groups.length === 0 && !showCreate && (
         <div className="mt-12 text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
           <div className="relative mx-auto h-28 w-28">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-pink-200 opacity-50 blur-xl" />
-            <div className="animate-float relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-pink-100">
-              <svg className="h-14 w-14 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="absolute inset-0 rounded-full bg-zinc-200 opacity-40 blur-xl dark:bg-zinc-700" />
+            <div className="animate-float relative flex h-28 w-28 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800/80">
+              <svg className="h-14 w-14 text-zinc-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
               </svg>

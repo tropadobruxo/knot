@@ -80,14 +80,14 @@ export default function SearchPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar perfis, grupos, eventos..."
-            className="w-full rounded-xl border border-zinc-300 py-2.5 pl-10 pr-4 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            className="w-full rounded-xl border border-zinc-300 py-2.5 pl-10 pr-4 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:border-violet-500 dark:focus:ring-violet-900/40"
             minLength={2}
           />
         </div>
         <button
           type="submit"
           disabled={loading || query.trim().length < 2}
-          className="rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg active:scale-95 disabled:opacity-50"
+          className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97] disabled:opacity-50"
         >
           {loading ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -104,8 +104,8 @@ export default function SearchPage() {
             onClick={() => { setType(tab.value); setResults([]); setSearched(false); }}
             className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition ${
               type === tab.value
-                ? "bg-violet-600 text-white shadow-md"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                : "border border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
             }`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -119,7 +119,7 @@ export default function SearchPage() {
       <div className="mt-6 space-y-2">
         {results.length === 0 && searched && !loading && (
           <div className="py-8 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
               <svg className="h-7 w-7 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
@@ -131,8 +131,8 @@ export default function SearchPage() {
 
         {!searched && !loading && (
           <div className="py-8 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-violet-100">
-              <svg className="h-7 w-7 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+              <svg className="h-7 w-7 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
               </svg>
             </div>
@@ -143,7 +143,7 @@ export default function SearchPage() {
         {loading && (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="rounded-xl border border-zinc-200 p-4">
+              <div key={i} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
                 <div className="skeleton h-4 w-32" />
                 <div className="skeleton mt-2 h-3 w-48" />
               </div>
@@ -155,9 +155,9 @@ export default function SearchPage() {
           <Link
             key={r.id}
             href={getLink(r)}
-            className="group flex items-center gap-3 rounded-xl border border-zinc-200 p-4 transition hover:border-violet-300 hover:shadow-md"
+            className="group flex items-center gap-3 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm transition hover:border-zinc-300 dark:border-zinc-800/80 dark:bg-zinc-900/60 dark:hover:border-zinc-700"
           >
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-violet-100 text-sm font-bold text-violet-600">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-violet-600 text-sm font-bold text-white">
               {getLabel(r)[0]?.toUpperCase()}
             </div>
             <div className="flex-1">

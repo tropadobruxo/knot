@@ -44,9 +44,9 @@ export function InstallPrompt() {
   if (!deferredPrompt || dismissed) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-sm animate-slide-up rounded-2xl border border-violet-200 bg-white p-4 shadow-2xl dark:border-zinc-700 dark:bg-zinc-900 sm:bottom-6">
+    <div className="fixed bottom-20 left-4 right-4 z-50 mx-auto max-w-sm animate-slide-up rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/60 sm:bottom-6">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-pink-500">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-violet-600">
           <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
           </svg>
@@ -68,7 +68,7 @@ export function InstallPrompt() {
       <div className="mt-3 flex gap-2">
         <button
           onClick={handleInstall}
-          className="flex-1 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700"
+          className="flex-1 rounded-xl bg-violet-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97]"
         >
           Instalar
         </button>

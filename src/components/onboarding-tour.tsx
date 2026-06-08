@@ -72,7 +72,7 @@ export function OnboardingTour() {
 
   return (
     <div
-      className={`fixed left-4 right-4 z-[60] mx-auto max-w-sm rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 p-4 shadow-2xl ${
+      className={`fixed left-4 right-4 z-[60] mx-auto max-w-sm rounded-2xl bg-violet-600 p-4 shadow-lg ${
         currentTip.position === "top" ? "top-16 sm:top-14" : "bottom-20 sm:bottom-4"
       }`}
       style={{ animation: "slide-up 0.4s ease-out" }}

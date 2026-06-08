@@ -181,10 +181,10 @@ export default function NotificationsPage() {
       {notifications.length === 0 && (
         <div className="mt-16 text-center" style={{ animation: "slide-up 0.5s ease-out" }}>
           <div className="relative mx-auto h-28 w-28">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-pink-200 opacity-50 blur-xl" />
-            <div className="animate-float relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-pink-100">
+            <div className="absolute inset-0 rounded-full bg-zinc-200 opacity-40 blur-xl dark:bg-zinc-700" />
+            <div className="animate-float relative flex h-28 w-28 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800/80">
               <svg
-                className="h-14 w-14 text-violet-400"
+                className="h-14 w-14 text-zinc-400 dark:text-zinc-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"

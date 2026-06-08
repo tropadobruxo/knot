@@ -54,8 +54,8 @@ export default function PremiumPage() {
     <main className="relative mx-auto max-w-3xl overflow-hidden px-6 py-10">
       {/* Decorative floating elements */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="animate-float-slow absolute -top-10 right-[15%] h-48 w-48 rounded-full bg-violet-200 opacity-20 blur-3xl" />
-        <div className="animate-float-delayed absolute bottom-[20%] left-[10%] h-36 w-36 rounded-full bg-pink-200 opacity-20 blur-3xl" />
+        <div className="animate-float-slow absolute -top-10 right-[15%] h-48 w-48 rounded-full bg-zinc-200 opacity-40 blur-3xl dark:bg-zinc-700" />
+        <div className="animate-float-delayed absolute bottom-[20%] left-[10%] h-36 w-36 rounded-full bg-zinc-200 opacity-40 blur-3xl dark:bg-zinc-700" />
         <svg className="animate-float absolute left-[5%] top-[15%] h-8 w-8 text-amber-300/30" fill="currentColor" viewBox="0 0 24 24">
           <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
         </svg>
@@ -79,7 +79,7 @@ export default function PremiumPage() {
             <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
           </svg>
         </div>
-        <h1 className="animate-gradient bg-gradient-to-r from-violet-600 via-pink-500 to-violet-600 bg-clip-text text-4xl font-extrabold text-transparent">
+        <h1 className="bg-gradient-to-r from-violet-600 to-pink-500 bg-clip-text text-4xl font-extrabold text-transparent">
           Knot Plus
         </h1>
         <p className="mt-2 text-zinc-500">
@@ -90,7 +90,7 @@ export default function PremiumPage() {
       {/* Plans comparison */}
       <div className="mt-8 grid gap-6 md:grid-cols-2">
         {/* Free */}
-        <div className="rounded-2xl border border-zinc-200 p-6">
+        <div className="rounded-2xl border border-zinc-200/80 bg-white p-6 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/60">
           <h2 className="text-xl font-semibold">Free</h2>
           <p className="mt-1 text-3xl font-bold">
             R$ 0<span className="text-sm font-normal text-zinc-500">/mês</span>
@@ -108,18 +108,18 @@ export default function PremiumPage() {
         </div>
 
         {/* Plus */}
-        <div className="animate-glow relative overflow-hidden rounded-2xl border-2 border-violet-500 bg-gradient-to-b from-violet-50 to-white p-6 shadow-lg">
-          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-violet-200 opacity-50 blur-2xl" />
+        <div className="relative overflow-hidden rounded-2xl border-2 border-violet-500 bg-white p-6 shadow-sm dark:border-violet-500/70 dark:bg-zinc-900/60">
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-zinc-200 opacity-40 blur-2xl dark:bg-zinc-700" />
           <div className="relative">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-violet-800">Plus</h2>
-              <span className="rounded-full bg-gradient-to-r from-violet-600 to-pink-500 px-3 py-0.5 text-xs font-semibold text-white">
+              <h2 className="text-xl font-semibold text-violet-700 dark:text-violet-300">Plus</h2>
+              <span className="rounded-full bg-violet-600 px-3 py-0.5 text-xs font-semibold text-white">
                 Recomendado
               </span>
             </div>
-            <p className="mt-1 text-3xl font-bold text-violet-800">
+            <p className="mt-1 text-3xl font-bold text-violet-700 dark:text-violet-300">
               {formatPrice(PLUS_PRICE_CENTS)}
-              <span className="text-sm font-normal text-violet-500">/mês</span>
+              <span className="text-sm font-normal text-violet-500 dark:text-violet-400">/mês</span>
             </p>
             <ul className="mt-6 space-y-3">
               {FREE_FEATURES.map((f) => (
@@ -131,7 +131,7 @@ export default function PremiumPage() {
                 </li>
               ))}
               {PREMIUM_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2.5 text-sm font-medium text-violet-800">
+                <li key={f} className="flex items-center gap-2.5 text-sm font-medium text-violet-700 dark:text-violet-300">
                   <svg className="h-5 w-5 flex-shrink-0 text-violet-500" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
                   </svg>
@@ -142,7 +142,7 @@ export default function PremiumPage() {
             <button
               onClick={handleSubscribe}
               disabled={loading}
-              className="mt-6 w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 py-3 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+              className="mt-6 w-full rounded-xl bg-violet-600 py-3 font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97] disabled:opacity-50"
             >
               {loading ? "Processando..." : "Assinar Plus"}
             </button>

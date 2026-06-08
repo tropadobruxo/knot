@@ -333,7 +333,7 @@ export default function DiscoverPage() {
             <p className="mt-4 text-zinc-500">Nenhum perfil com esses filtros.</p>
             <button
               onClick={clearFilters}
-              className="mt-4 inline-block rounded-lg bg-violet-600 px-5 py-2 text-sm font-medium text-white hover:bg-violet-700"
+              className="mt-4 inline-block rounded-lg bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900"
             >
               Limpar filtros
             </button>
@@ -341,9 +341,9 @@ export default function DiscoverPage() {
         ) : (
           <div className="mt-10" style={{ animation: "slide-up 0.5s ease-out" }}>
             <div className="relative mx-auto h-32 w-32">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-violet-200 to-pink-200 opacity-50 blur-xl" />
-              <div className="animate-float relative flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-violet-100 to-pink-100">
-                <svg className="h-16 w-16 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="absolute inset-0 rounded-full bg-zinc-200 opacity-40 blur-xl dark:bg-zinc-700" />
+              <div className="animate-float relative flex h-32 w-32 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800/80">
+                <svg className="h-16 w-16 text-zinc-400 dark:text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.502-4.688-4.502-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.748 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
               </div>
@@ -358,7 +358,7 @@ export default function DiscoverPage() {
             <p className="mt-1 text-sm text-zinc-400">Volte mais tarde para novas conexoes!</p>
             <Link
               href="/matches"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lg"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white"
             >
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
@@ -390,8 +390,8 @@ export default function DiscoverPage() {
           disabled={boostActive || boostLoading}
           className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition ${
             boostActive
-              ? "border-purple-300 bg-purple-50 text-purple-600"
-              : "border-zinc-300 text-zinc-500 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-600"
+              ? "border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700/50 dark:bg-violet-900/20 dark:text-violet-400"
+              : "border-zinc-200 text-zinc-500 hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:text-zinc-300"
           }`}
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -399,7 +399,7 @@ export default function DiscoverPage() {
           </svg>
           {boostActive ? "Boost ativo" : "Boost"}
         </button>
-        <Link href="/likes" className="flex items-center gap-1 rounded-lg border border-zinc-300 px-2.5 py-1.5 text-sm font-medium text-zinc-500 transition hover:border-pink-300 hover:bg-pink-50 hover:text-pink-600">
+        <Link href="/likes" className="flex items-center gap-1 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-sm font-medium text-zinc-500 transition hover:border-zinc-300 hover:text-zinc-700 dark:border-zinc-700 dark:hover:border-zinc-600 dark:hover:text-zinc-300">
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
           </svg>
@@ -409,8 +409,8 @@ export default function DiscoverPage() {
           onClick={() => setShowFilters(!showFilters)}
           className={`relative flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
             showFilters || activeFilters > 0
-              ? "border-violet-300 bg-violet-50 text-violet-700"
-              : "border-zinc-300 text-zinc-600 hover:bg-zinc-50"
+              ? "border-zinc-400 bg-zinc-900 text-white dark:border-zinc-500 dark:bg-zinc-100 dark:text-zinc-900"
+              : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
           }`}
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -418,7 +418,7 @@ export default function DiscoverPage() {
           </svg>
           Filtros
           {activeFilters > 0 && (
-            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[10px] font-bold text-white">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-zinc-900 dark:bg-zinc-900 dark:text-zinc-50">
               {activeFilters}
             </span>
           )}
@@ -493,7 +493,7 @@ export default function DiscoverPage() {
           {activeFilters > 0 && (
             <button
               onClick={clearFilters}
-              className="mt-3 text-xs text-violet-600 hover:underline"
+              className="mt-3 text-xs text-zinc-500 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200"
             >
               Limpar todos os filtros
             </button>
@@ -518,7 +518,7 @@ export default function DiscoverPage() {
         onSwipeRight={() => handleLike()}
         onSwipeLeft={handlePass}
       >
-      <div className="mt-6 rounded-xl border border-zinc-200 overflow-hidden dark:border-zinc-700 select-none">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/60 select-none">
 
         {/* Photo Gallery */}
         <div className="relative aspect-[3/4] bg-zinc-200 dark:bg-zinc-800">
@@ -578,7 +578,7 @@ export default function DiscoverPage() {
             </>
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-2">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-200 to-pink-200 text-4xl font-bold text-violet-500">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zinc-200 text-4xl font-bold text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400">
                 {current.username[0]?.toUpperCase()}
               </div>
               <span className="text-xs text-zinc-400">Sem foto</span>
@@ -627,7 +627,7 @@ export default function DiscoverPage() {
               </span>
             )}
             {current.roleType && (
-              <span className="rounded bg-violet-100 px-2 py-0.5 text-xs text-violet-800">
+              <span className="rounded-md border border-zinc-200 px-2 py-0.5 text-xs text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                 {current.roleType}
               </span>
             )}
@@ -651,7 +651,7 @@ export default function DiscoverPage() {
               {current.intent.map((i) => (
                 <span
                   key={i}
-                  className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs dark:bg-zinc-800"
+                  className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs text-zinc-600 dark:border-zinc-700/70 dark:bg-zinc-800/60 dark:text-zinc-400"
                 >
                   {i}
                 </span>
@@ -694,7 +694,7 @@ export default function DiscoverPage() {
         <div className="flex gap-2 p-4 pt-0">
           <button
             onClick={handlePass}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-300 py-3 text-sm font-medium text-zinc-500 transition hover:bg-zinc-50 active:scale-95 dark:border-zinc-600 dark:hover:bg-zinc-800"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 py-3 text-sm font-medium text-zinc-500 transition hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.97] dark:border-zinc-700 dark:hover:bg-zinc-800/60"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -703,7 +703,7 @@ export default function DiscoverPage() {
           </button>
           <button
             onClick={() => setShowSuperLike(true)}
-            className="flex items-center justify-center gap-1 rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-600 transition hover:bg-amber-100 active:scale-95 dark:border-amber-500 dark:bg-amber-950/20 dark:text-amber-400"
+            className="flex items-center justify-center gap-1 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-600 transition hover:bg-amber-100 active:scale-[0.97] dark:border-amber-700/50 dark:bg-amber-950/20 dark:text-amber-400"
             title="Super Like com nota"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -712,7 +712,7 @@ export default function DiscoverPage() {
           </button>
           <button
             onClick={() => handleLike()}
-            className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 py-3 text-sm font-medium text-white shadow-md transition hover:shadow-lg active:scale-95"
+            className="group flex flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97]"
           >
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
@@ -759,7 +759,7 @@ export default function DiscoverPage() {
                 </button>
                 <button
                   onClick={() => handleLike(true, superLikeNote || undefined)}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 py-2.5 text-sm font-bold text-white shadow-md hover:shadow-lg"
+                  className="flex-1 rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600"
                 >
                   Enviar Super Like
                 </button>

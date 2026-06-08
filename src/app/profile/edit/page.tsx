@@ -75,7 +75,7 @@ export default function EditProfilePage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
@@ -90,7 +90,7 @@ export default function EditProfilePage() {
 
       <form onSubmit={handleSave} className="mt-6 space-y-6">
         <div>
-          <label htmlFor="bio" className="block text-sm font-medium text-zinc-700">
+          <label htmlFor="bio" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Bio
           </label>
           <textarea
@@ -99,14 +99,14 @@ export default function EditProfilePage() {
             onChange={(e) => setBio(e.target.value)}
             maxLength={500}
             rows={3}
-            className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            className="mt-1 w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:border-violet-500 dark:focus:ring-violet-900/40"
             placeholder="Conte um pouco sobre você..."
           />
           <p className="mt-1 text-right text-xs text-zinc-400">{bio.length}/500</p>
         </div>
 
         <div>
-          <label htmlFor="city" className="block text-sm font-medium text-zinc-700">
+          <label htmlFor="city" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">
             Cidade
           </label>
           <div className="relative mt-1">
@@ -119,27 +119,27 @@ export default function EditProfilePage() {
               type="text"
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="w-full rounded-xl border border-zinc-300 py-2.5 pl-10 pr-4 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              className="w-full rounded-xl border border-zinc-300 py-2.5 pl-10 pr-4 text-sm transition focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100 dark:border-zinc-700 dark:bg-zinc-800 dark:focus:border-violet-500 dark:focus:ring-violet-900/40"
               placeholder="Ex: São Paulo"
             />
           </div>
         </div>
 
         <div>
-          <p className="text-sm font-medium text-zinc-700">Papel</p>
+          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Papel</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {ROLES.map((r) => (
               <button
                 key={r.value}
                 type="button"
                 onClick={() => setRole(r.value)}
-                className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2.5 text-sm transition active:scale-[0.98] ${
+                className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm transition active:scale-[0.98] ${
                   role === r.value
-                    ? "border-violet-500 bg-violet-50 font-medium text-violet-900"
-                    : "border-zinc-200 hover:border-zinc-300"
+                    ? "border-zinc-900 bg-zinc-900 font-medium text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                    : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
                 }`}
               >
-                <svg className={`h-4 w-4 ${role === r.value ? "text-violet-500" : "text-zinc-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg className={`h-4 w-4 ${role === r.value ? "text-white dark:text-zinc-900" : "text-zinc-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d={r.icon} />
                 </svg>
                 {r.label}
@@ -149,17 +149,17 @@ export default function EditProfilePage() {
         </div>
 
         <div>
-          <p className="text-sm font-medium text-zinc-700">Busca</p>
+          <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Busca</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {INTENTS.map((i) => (
               <button
                 key={i.value}
                 type="button"
                 onClick={() => toggleIntent(i.value)}
-                className={`rounded-xl border-2 px-3 py-2.5 text-sm transition active:scale-[0.98] ${
+                className={`rounded-xl border px-3 py-2.5 text-sm transition active:scale-[0.98] ${
                   intents.includes(i.value)
-                    ? "border-violet-500 bg-violet-50 font-medium text-violet-900"
-                    : "border-zinc-200 hover:border-zinc-300"
+                    ? "border-zinc-900 bg-zinc-900 font-medium text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                    : "border-zinc-200 text-zinc-600 hover:border-zinc-300 hover:text-zinc-800 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-200"
                 }`}
               >
                 {i.label}
@@ -171,7 +171,7 @@ export default function EditProfilePage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-500 py-3 font-semibold text-white shadow-lg transition hover:shadow-xl active:scale-[0.98] disabled:opacity-50"
+          className="w-full rounded-xl bg-violet-600 py-3 font-semibold text-white shadow-sm transition hover:bg-violet-700 active:scale-[0.97] disabled:opacity-50"
         >
           {loading ? "Salvando..." : saved ? "Salvo!" : "Salvar alterações"}
         </button>
@@ -182,7 +182,7 @@ export default function EditProfilePage() {
           <Link
             key={link.href}
             href={link.href}
-            className="flex items-center gap-3 rounded-xl border border-zinc-200 px-4 py-3.5 text-sm font-medium transition hover:border-violet-300 hover:bg-violet-50/50"
+            className="flex items-center gap-3 rounded-xl border border-zinc-200 px-4 py-3.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-800/60"
           >
             <svg className="h-5 w-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d={link.icon} />

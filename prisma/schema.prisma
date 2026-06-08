@@ -85,6 +85,11 @@ enum SelfieVerificationStatus {
   rejected
 }
 
+enum LimitType {
+  hard
+  soft
+}
+
 // ──────────────────────────────────────────────
 // Core: User
 // ──────────────────────────────────────────────
@@ -178,6 +183,10 @@ model User {
   // Secret profile mode
   secretProfile        Boolean  @default(false)
 
+  // Trusted contact for panic mode alerts
+  trustedContactName   String?
+  trustedContactEmail  String?
+
   @@index([city])
   @@index([status])
 }
@@ -246,9 +255,10 @@ model UserInterest {
 }
 
 model Limit {
-  id          String @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
   description String
+  type        LimitType @default(hard)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

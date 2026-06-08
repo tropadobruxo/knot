@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 const privacySchema = z.object({
   discreetMode: z.boolean().optional(),
   secretProfile: z.boolean().optional(),
+  trustedContactName: z.string().max(120).optional(),
+  trustedContactEmail: z.string().email().or(z.literal("")).optional(),
 });
 
 export async function GET() {
@@ -16,7 +18,12 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { discreetMode: true, secretProfile: true },
+    select: {
+      discreetMode: true,
+      secretProfile: true,
+      trustedContactName: true,
+      trustedContactEmail: true,
+    },
   });
 
   return NextResponse.json(user);
@@ -43,6 +50,10 @@ export async function PATCH(request: Request) {
     data.discreetMode = parsed.data.discreetMode;
   if (parsed.data.secretProfile !== undefined)
     data.secretProfile = parsed.data.secretProfile;
+  if (parsed.data.trustedContactName !== undefined)
+    data.trustedContactName = parsed.data.trustedContactName.trim() || null;
+  if (parsed.data.trustedContactEmail !== undefined)
+    data.trustedContactEmail = parsed.data.trustedContactEmail.trim() || null;
 
   await prisma.user.update({
     where: { id: session.user.id },

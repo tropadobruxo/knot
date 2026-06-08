@@ -8,6 +8,8 @@ export default function PrivacySettingsPage() {
   const router = useRouter();
   const [discreetMode, setDiscreetMode] = useState(false);
   const [secretProfile, setSecretProfile] = useState(false);
+  const [trustedContactName, setTrustedContactName] = useState("");
+  const [trustedContactEmail, setTrustedContactEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -19,10 +21,12 @@ export default function PrivacySettingsPage() {
 
   useEffect(() => {
     fetch("/api/settings/privacy")
-      .then((r) => r.json() as Promise<{ discreetMode: boolean; secretProfile: boolean }>)
+      .then((r) => r.json() as Promise<{ discreetMode: boolean; secretProfile: boolean; trustedContactName: string | null; trustedContactEmail: string | null }>)
       .then((data) => {
         setDiscreetMode(data.discreetMode);
         setSecretProfile(data.secretProfile);
+        setTrustedContactName(data.trustedContactName ?? "");
+        setTrustedContactEmail(data.trustedContactEmail ?? "");
       })
       .catch(() => {});
 
@@ -43,7 +47,7 @@ export default function PrivacySettingsPage() {
     await fetch("/api/settings/privacy", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ discreetMode, secretProfile }),
+      body: JSON.stringify({ discreetMode, secretProfile, trustedContactName, trustedContactEmail }),
     });
 
     localStorage.setItem("knot-discreet", String(discreetMode));
@@ -214,6 +218,37 @@ export default function PrivacySettingsPage() {
           >
             Verificar agora
           </Link>
+        </div>
+
+        {/* Trusted contact (panic mode) */}
+        <div className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
+          <div className="flex items-center gap-2">
+            <svg className="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+            </svg>
+            <p className="font-medium">Contato de confiança</p>
+          </div>
+          <p className="mt-1 text-sm text-zinc-500">
+            Ao ativar o modo pânico em uma conversa, bloqueamos a pessoa,
+            apagamos o histórico e avisamos discretamente este contato por email.
+            Nenhum dado da conversa é compartilhado.
+          </p>
+          <div className="mt-3 space-y-2">
+            <input
+              placeholder="Nome do contato (opcional)"
+              value={trustedContactName}
+              onChange={(e) => setTrustedContactName(e.target.value)}
+              maxLength={120}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            />
+            <input
+              type="email"
+              placeholder="Email do contato"
+              value={trustedContactEmail}
+              onChange={(e) => setTrustedContactEmail(e.target.value)}
+              className="w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+            />
+          </div>
         </div>
 
         <div className="rounded-lg border border-violet-200 bg-violet-50 p-4">

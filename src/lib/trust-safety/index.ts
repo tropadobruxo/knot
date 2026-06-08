@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export {
+  computeTrustLevel,
+  type TrustInput,
+  type TrustLevel,
+  type TrustResult,
+} from "./trust-level";
+
 // ── Report reasons ──────────────────────────────
 export const REPORT_REASONS = [
   "harassment",

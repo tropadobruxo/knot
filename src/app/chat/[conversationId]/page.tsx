@@ -311,8 +311,12 @@ export default function ChatPage() {
                 Enviar denuncia com contexto da conversa
               </li>
               <li className="flex items-center gap-2">
+                <svg className="h-4 w-4 text-zinc-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4z" clipRule="evenodd" /></svg>
+                Apagar todo o historico desta conversa
+              </li>
+              <li className="flex items-center gap-2">
                 <svg className="h-4 w-4 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg>
-                Proteger voce de contato futuro
+                Avisar seu contato de confianca (se configurado)
               </li>
             </ul>
             <div className="mt-6 flex gap-3">
@@ -344,7 +348,7 @@ export default function ChatPage() {
             </div>
             <h3 className="mt-4 text-lg font-bold">Voce esta protegido(a)</h3>
             <p className="mt-2 text-sm text-zinc-500">
-              A pessoa foi bloqueada e a denuncia enviada com o contexto da conversa. Nossa equipe ira analisar.
+              A pessoa foi bloqueada, o historico da conversa foi apagado e a denuncia enviada para nossa equipe. Se voce configurou um contato de confianca, ele foi avisado.
             </p>
             <Link
               href="/matches"

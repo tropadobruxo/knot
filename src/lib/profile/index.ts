@@ -33,7 +33,7 @@ export async function getPublicProfile(
           interest: { select: { id: true, name: true, category: true } },
         },
       },
-      limits: { select: { id: true, description: true } },
+      limits: { select: { id: true, description: true, type: true } },
       photos: {
         select: {
           id: true,

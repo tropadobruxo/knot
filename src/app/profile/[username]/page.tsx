@@ -8,6 +8,7 @@ import { PhotoLightbox } from "@/components/photo-lightbox";
 import { ShareProfile } from "@/components/share-profile";
 import { CompatibilityCard } from "@/components/compatibility-card";
 import { EndorsementSection } from "@/components/endorsement-section";
+import { TrustBadge } from "@/components/trust-badge";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -92,6 +93,14 @@ export default async function ProfilePage({ params }: Props) {
             )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2">
+            <TrustBadge
+              trust={{
+                emailVerified: profile.emailVerified,
+                ageVerified: profile.ageVerified,
+                selfieVerified: profile.selfieVerified,
+                endorsementCount: profile.endorsements.reduce((sum, e) => sum + e.count, 0),
+              }}
+            />
             {profile.emailVerified && (
               <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
                 <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -224,19 +233,51 @@ export default async function ProfilePage({ params }: Props) {
 
       {profile.limits.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Limites</h3>
-          <ul className="mt-2 space-y-2">
-            {profile.limits.map((limit) => (
-              <li key={limit.id} className="flex items-center gap-2 text-sm">
-                <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
-                  <svg className="h-3 w-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                {limit.description}
-              </li>
-            ))}
-          </ul>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+            Limites e consentimento
+          </h3>
+          {profile.limits.some((l) => l.type === "hard") && (
+            <div className="mt-2">
+              <p className="text-xs font-medium text-rose-600 dark:text-rose-400">
+                Limites rígidos — inegociáveis
+              </p>
+              <ul className="mt-1.5 space-y-2">
+                {profile.limits
+                  .filter((l) => l.type === "hard")
+                  .map((limit) => (
+                    <li key={limit.id} className="flex items-center gap-2 text-sm">
+                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-900/40">
+                        <svg className="h-3 w-3 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                      {limit.description}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
+          {profile.limits.some((l) => l.type === "soft") && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                Limites flexíveis — só com consentimento explícito
+              </p>
+              <ul className="mt-1.5 space-y-2">
+                {profile.limits
+                  .filter((l) => l.type === "soft")
+                  .map((limit) => (
+                    <li key={limit.id} className="flex items-center gap-2 text-sm">
+                      <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
+                        <svg className="h-3 w-3 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                        </svg>
+                      </div>
+                      {limit.description}
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

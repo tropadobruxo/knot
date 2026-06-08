@@ -21,6 +21,21 @@ interface ReportsResponse {
   pages: number;
 }
 
+interface TargetHistory {
+  total: number;
+  distinctReporters: number;
+  byReason: { reason: string; count: number }[];
+  byStatus: { status: string; count: number }[];
+  moderationLogs: { id: string; action: string; reason: string; createdAt: string }[];
+  reports: {
+    id: string;
+    reason: string;
+    status: string;
+    createdAt: string;
+    creator: { username: string };
+  }[];
+}
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
   reviewed: "bg-blue-100 text-blue-800",
@@ -34,6 +49,23 @@ export default function ModerationPage() {
   const [page, setPage] = useState(1);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [openHistory, setOpenHistory] = useState<string | null>(null);
+  const [history, setHistory] = useState<Record<string, TargetHistory>>({});
+
+  async function toggleHistory(targetId: string) {
+    if (openHistory === targetId) {
+      setOpenHistory(null);
+      return;
+    }
+    setOpenHistory(targetId);
+    if (!history[targetId]) {
+      const res = await fetch(`/api/moderation/users/${targetId}/reports`);
+      if (res.ok) {
+        const data = (await res.json()) as TargetHistory;
+        setHistory((prev) => ({ ...prev, [targetId]: data }));
+      }
+    }
+  }
 
   const loadReports = useCallback(async () => {
     const params = new URLSearchParams();
@@ -157,6 +189,14 @@ export default function ModerationPage() {
                       minute: "2-digit",
                     })}
                   </p>
+                  <button
+                    onClick={() => toggleHistory(report.target.id)}
+                    className="mt-2 text-xs font-medium text-violet-600 hover:underline"
+                  >
+                    {openHistory === report.target.id
+                      ? "Ocultar histórico"
+                      : "Ver histórico de denúncias"}
+                  </button>
                 </div>
 
                 {report.status === "pending" && (
@@ -192,6 +232,12 @@ export default function ModerationPage() {
                   </div>
                 )}
               </div>
+
+              {openHistory === report.target.id && (
+                <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-sm dark:bg-zinc-900/60">
+                  <HistoryPanel data={history[report.target.id]} />
+                </div>
+              )}
             </div>
           ))}
 
@@ -220,5 +266,70 @@ export default function ModerationPage() {
         </div>
       )}
     </main>
+  );
+}
+
+function HistoryPanel({ data }: { data: TargetHistory | undefined }) {
+  if (!data) {
+    return <p className="text-zinc-500">Carregando histórico...</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-3 text-xs">
+        <span className="font-medium">
+          {data.total} denúncia{data.total !== 1 ? "s" : ""} no total
+        </span>
+        <span className="text-zinc-500">
+          {data.distinctReporters} denunciante
+          {data.distinctReporters !== 1 ? "s" : ""} distinto
+          {data.distinctReporters !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {data.byReason.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {data.byReason.map((r) => (
+            <span
+              key={r.reason}
+              className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+            >
+              {REPORT_REASON_LABELS[r.reason as ReportReason] ?? r.reason}: {r.count}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {data.moderationLogs.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-zinc-500">Ações anteriores</p>
+          <ul className="mt-1 space-y-1">
+            {data.moderationLogs.map((log) => (
+              <li key={log.id} className="text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="font-medium">{log.action}</span> — {log.reason}{" "}
+                <span className="text-zinc-400">
+                  ({new Date(log.createdAt).toLocaleDateString("pt-BR")})
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div>
+        <p className="text-xs font-medium text-zinc-500">Linha do tempo</p>
+        <ul className="mt-1 space-y-1">
+          {data.reports.map((r) => (
+            <li key={r.id} className="text-xs text-zinc-600 dark:text-zinc-400">
+              <span className="text-zinc-400">
+                {new Date(r.createdAt).toLocaleDateString("pt-BR")}
+              </span>{" "}
+              — {REPORT_REASON_LABELS[r.reason as ReportReason] ?? r.reason} (
+              {r.status}) por {r.creator.username}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }

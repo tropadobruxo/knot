@@ -20,6 +20,8 @@ interface CompatBreakdown {
   complementaryRole: boolean;
   sameCity: boolean;
   sharedIntents: number;
+  nearby?: boolean;
+  distanceKm?: number | null;
 }
 
 interface Profile {
@@ -171,28 +173,58 @@ export default function DiscoverPage() {
     fetch("/api/boost").then((r) => r.json() as Promise<{ active: boolean }>).then((d) => setBoostActive(d.active)).catch(() => {});
   }, []);
 
+  const buildQuery = useCallback((lim: number) => {
+    const params = new URLSearchParams();
+    params.set("limit", String(lim));
+    if (filterRole) params.set("role", filterRole);
+    if (filterIntent) params.set("intent", filterIntent);
+    if (filterCity) params.set("city", filterCity);
+    if (filterInterest.trim()) params.set("interest", filterInterest.trim());
+    if (filterVerifiedOnly) params.set("verified", "1");
+    return params.toString();
+  }, [filterRole, filterIntent, filterCity, filterInterest, filterVerifiedOnly]);
+
+  const anyFilterActive = !!(filterRole || filterIntent || filterCity || filterInterest.trim() || filterVerifiedOnly);
+
+  // Fetch (and re-fetch) the candidate pool from the server whenever filters change.
   useEffect(() => {
-    fetch("/api/discover?limit=20")
-      .then((r) => {
-        if (!r.ok) throw new Error();
-        return r.json() as Promise<{ profiles: Profile[] }>;
-      })
-      .then((d) => {
-        if (d.profiles.length > 0) {
-          setProfiles(d.profiles);
-          setExhausted(d.profiles.length < 20);
-        } else {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      setLoading(true);
+      fetch(`/api/discover?${buildQuery(20)}`, { signal: controller.signal })
+        .then((r) => {
+          if (!r.ok) throw new Error();
+          return r.json() as Promise<{ profiles: Profile[] }>;
+        })
+        .then((d) => {
+          if (d.profiles.length > 0) {
+            setProfiles(d.profiles);
+            setExhausted(d.profiles.length < 20);
+          } else if (anyFilterActive) {
+            // Authenticated, real data, no matches for these filters.
+            setProfiles([]);
+            setExhausted(true);
+          } else {
+            setProfiles(PREVIEW_PROFILES);
+            setExhausted(true);
+          }
+          setIndex(0);
+          setLoading(false);
+        })
+        .catch((err: unknown) => {
+          if (err instanceof DOMException && err.name === "AbortError") return;
+          // No backend data (demo deploy) — fall back to preview, filtered client-side.
           setProfiles(PREVIEW_PROFILES);
           setExhausted(true);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setProfiles(PREVIEW_PROFILES);
-        setExhausted(true);
-        setLoading(false);
-      });
-  }, []);
+          setIndex(0);
+          setLoading(false);
+        });
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [buildQuery, anyFilterActive]);
 
   const filtered = useMemo(() => {
     return profiles.filter((p) => {
@@ -207,11 +239,12 @@ export default function DiscoverPage() {
 
   const cities = useMemo(() => {
     const set = new Set<string>();
+    if (filterCity) set.add(filterCity);
     for (const p of profiles) {
       if (p.city) set.add(p.city);
     }
     return Array.from(set).sort();
-  }, [profiles]);
+  }, [profiles, filterCity]);
 
   // Auto-fetch more profiles when running low
   useEffect(() => {
@@ -219,7 +252,7 @@ export default function DiscoverPage() {
     if (remaining > 5 || loadingMoreRef.current || exhausted) return;
 
     loadingMoreRef.current = true;
-    fetch("/api/discover?limit=20")
+    fetch(`/api/discover?${buildQuery(20)}`)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json() as Promise<{ profiles: Profile[] }>;
@@ -239,7 +272,7 @@ export default function DiscoverPage() {
         loadingMoreRef.current = false;
       })
       .catch(() => { loadingMoreRef.current = false; });
-  }, [index, filtered.length, exhausted, profiles]);
+  }, [index, filtered.length, exhausted, profiles, buildQuery]);
 
   const activeFilters = [filterCity, filterRole, filterIntent, filterInterest, filterVerifiedOnly].filter(Boolean).length;
 
@@ -678,6 +711,14 @@ export default function DiscoverPage() {
                 <span className="flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                   <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
                   Mesma cidade
+                </span>
+              )}
+              {current.compatibilityBreakdown.nearby && !current.compatibilityBreakdown.sameCity && (
+                <span className="flex items-center gap-1 rounded-full bg-cyan-100 px-2 py-0.5 text-[11px] font-medium text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                  {current.compatibilityBreakdown.distanceKm != null
+                    ? `Perto (~${current.compatibilityBreakdown.distanceKm} km)`
+                    : "Perto de você"}
                 </span>
               )}
               {current.compatibilityBreakdown.sharedIntents > 0 && (

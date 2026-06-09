@@ -1,18 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma, RoleType, IntentType } from "@/generated/prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { scoreCandidateDetailed } from "@/lib/discovery/scoring";
+
+const ROLE_VALUES = ["dom", "sub", "switch", "exploring"];
+const INTENT_VALUES = ["relacionamento", "amizade", "aprender", "casual"];
+
+/**
+ * Build a Prisma where-fragment from discover filter query params.
+ */
+function buildFilterWhere(searchParams: URLSearchParams): Prisma.UserWhereInput {
+  const where: Prisma.UserWhereInput = {};
+
+  const role = searchParams.get("role");
+  if (role && ROLE_VALUES.includes(role)) {
+    where.roleType = role as RoleType;
+  }
+
+  const intent = searchParams.get("intent");
+  if (intent && INTENT_VALUES.includes(intent)) {
+    where.intent = { has: intent as IntentType };
+  }
+
+  const city = searchParams.get("city");
+  if (city && city.trim()) {
+    where.city = { contains: city.trim(), mode: "insensitive" };
+  }
+
+  const interest = searchParams.get("interest");
+  if (interest && interest.trim()) {
+    where.interests = {
+      some: { interest: { name: { contains: interest.trim(), mode: "insensitive" } } },
+    };
+  }
+
+  if (searchParams.get("verified") === "1") {
+    where.photos = { some: { verified: true } };
+  }
+
+  return where;
+}
 
 export async function GET(request: NextRequest) {
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const { searchParams } = request.nextUrl;
   const limit = Math.min(20, Math.max(1, Number(searchParams.get("limit") ?? "10")));
+  const filterWhere = buildFilterWhere(searchParams);
 
   // Public (unauthenticated) mode — show limited profiles without scoring
   if (!userId) {
     const profiles = await prisma.user.findMany({
-      where: { status: "active", ageVerified: true },
+      where: { status: "active", ageVerified: true, ...filterWhere },
       take: limit,
       orderBy: { lastActive: "desc" },
       select: {
@@ -89,6 +129,8 @@ export async function GET(request: NextRequest) {
       roleType: true,
       intent: true,
       lastActive: true,
+      approxLat: true,
+      approxLng: true,
       interests: { select: { interestId: true, level: true } },
     },
   });
@@ -110,6 +152,7 @@ export async function GET(request: NextRequest) {
       id: { notIn: Array.from(excludeIds) },
       status: "active",
       ageVerified: true,
+      ...filterWhere,
     },
     take: fetchLimit,
     orderBy: { lastActive: "desc" },
@@ -127,6 +170,8 @@ export async function GET(request: NextRequest) {
       secretProfile: true,
       boostedUntil: true,
       lastActive: true,
+      approxLat: true,
+      approxLng: true,
       interests: { select: { interestId: true, level: true, interest: { select: { name: true } } } },
       photos: {
         where: { visibility: "public" },
@@ -175,6 +220,8 @@ export async function GET(request: NextRequest) {
         complementaryRole: c.complementaryRole,
         sameCity: c.sameCity,
         sharedIntents: c.sharedIntents,
+        nearby: c.nearby,
+        distanceKm: c.distanceKm,
       } : null,
       premiumTier: c.premiumTier,
       selfieVerified: c.selfieVerified,

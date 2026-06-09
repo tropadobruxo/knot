@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scoreCandidate } from "./scoring";
+import { scoreCandidate, scoreCandidateDetailed, haversineKm } from "./scoring";
 
 function makeProfile(overrides: Partial<Parameters<typeof scoreCandidate>[0]> = {}) {
   return {
@@ -92,5 +92,50 @@ describe("scoreCandidate", () => {
     expect(scoreCandidate(viewer, greatMatch)).toBeGreaterThan(
       scoreCandidate(viewer, poorMatch),
     );
+  });
+
+  it("adds +5 for a selfie-verified candidate", () => {
+    const viewer = makeProfile();
+    const verified = makeProfile({ selfieVerified: true });
+    // +5 selfie + recency (+2) = 7
+    expect(scoreCandidate(viewer, verified)).toBe(7);
+    expect(scoreCandidateDetailed(viewer, verified).selfieVerified).toBe(true);
+  });
+
+  it("does not score proximity when coordinates are missing", () => {
+    const viewer = makeProfile({ approxLat: -23.55, approxLng: -46.63 });
+    const candidate = makeProfile();
+    const result = scoreCandidateDetailed(viewer, candidate);
+    expect(result.distanceKm).toBeNull();
+    expect(result.nearby).toBe(false);
+  });
+
+  it("flags nearby and boosts score for close coordinates", () => {
+    // São Paulo center vs ~5km away
+    const viewer = makeProfile({ approxLat: -23.55, approxLng: -46.63 });
+    const candidate = makeProfile({ approxLat: -23.55, approxLng: -46.58 });
+    const result = scoreCandidateDetailed(viewer, candidate);
+    expect(result.nearby).toBe(true);
+    expect(result.distanceKm).not.toBeNull();
+    expect(result.distanceKm!).toBeLessThanOrEqual(25);
+    // +8 proximity + recency (+2) = 10
+    expect(result.score).toBe(10);
+  });
+
+  it("does not flag nearby for distant coordinates", () => {
+    // São Paulo vs Rio de Janeiro (~360km)
+    const viewer = makeProfile({ approxLat: -23.55, approxLng: -46.63 });
+    const candidate = makeProfile({ approxLat: -22.91, approxLng: -43.17 });
+    const result = scoreCandidateDetailed(viewer, candidate);
+    expect(result.nearby).toBe(false);
+    expect(result.distanceKm!).toBeGreaterThan(150);
+    // No proximity bonus, only recency
+    expect(result.score).toBe(2);
+  });
+
+  it("haversineKm computes a known distance (SP↔RJ ≈ 360km)", () => {
+    const km = haversineKm(-23.55, -46.63, -22.91, -43.17);
+    expect(km).toBeGreaterThan(330);
+    expect(km).toBeLessThan(380);
   });
 });
